@@ -1,12 +1,17 @@
 BUILDDIR=bin
 
 all:
-	go run cmd/client/main.go
+	cd client/
+	make
 
-build: 
+build:
 	go build -o ${BUILDDIR}/client cmd/client/main.go
 
+create-docker-images:
 
 
+docker-image-client:
+	docker build --tag goph-keeper-client ./client
 
-.PHONY: build all
+
+.PHONY: all build all docker-image
