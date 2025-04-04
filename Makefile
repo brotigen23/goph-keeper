@@ -14,4 +14,8 @@ docker-image-client:
 	docker build --tag goph-keeper-client ./client
 
 
-.PHONY: all build all docker-image
+test:
+	cd client/ && go test ./...
+	cd server && go test ./...
+
+.PHONY: all build all docker-image-client

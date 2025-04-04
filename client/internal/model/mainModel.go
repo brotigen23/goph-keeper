@@ -3,6 +3,7 @@ package model
 import (
 	"reflect"
 
+	"github.com/brotigen23/goph-keeper/client/internal/client"
 	"github.com/brotigen23/goph-keeper/client/internal/page"
 	"github.com/brotigen23/goph-keeper/client/internal/util"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,18 +19,20 @@ type MainModel struct {
 	currentPage int
 
 	logger *log.Logger
-
+	client *client.Client
 	width  int
 	height int
 }
 
-func NewMainModel(logger *log.Logger) *MainModel {
-	pages := []tea.Model{page.NewLogin(logger), page.NewTemplateModel(logger)}
+func NewMainModel(logger *log.Logger, client *client.Client) *MainModel {
+	pages := []tea.Model{page.NewLogin(logger, client), page.NewTemplateModel(logger)}
 	return &MainModel{
 		pages:       pages,
 		currentPage: 0,
 
 		logger: logger,
+
+		client: client,
 	}
 }
 
@@ -49,7 +52,6 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
 		m.width = msg.Width
-
 	// quit
 	case tea.KeyMsg:
 		switch msg.String() {

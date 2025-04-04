@@ -1,6 +1,8 @@
 package page
 
 import (
+	"github.com/brotigen23/goph-keeper/client/internal/client"
+	"github.com/brotigen23/goph-keeper/client/internal/message"
 	"github.com/brotigen23/goph-keeper/client/internal/style"
 	"github.com/brotigen23/goph-keeper/client/internal/util"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -12,13 +14,15 @@ import (
 const logoStr = "goph-keeper"
 
 type loginModel struct {
-	inputs     []textinput.Model
-	inputFocus int
+	inputs       []textinput.Model
+	inputFocus   int
+	serverStatus error
+	client       *client.Client
 
 	logger *log.Logger
 }
 
-func NewLogin(logger *log.Logger) tea.Model {
+func NewLogin(logger *log.Logger, client *client.Client) tea.Model {
 	inputs := make([]textinput.Model, 2)
 
 	loginInput := textinput.New()
@@ -40,16 +44,22 @@ func NewLogin(logger *log.Logger) tea.Model {
 	ret := loginModel{
 		inputs: inputs,
 		logger: logger,
+		client: client,
 	}
 	return ret
 }
 
 func (m loginModel) Init() tea.Cmd {
-	return nil
+	return func() tea.Msg {
+		err := m.client.Ping()
+		return message.PingServerErr(err)
+	}
 }
 
 func (m loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case message.PingServerErr:
+		m.serverStatus = msg
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
@@ -92,8 +102,15 @@ func (m loginModel) View() string {
 	frame += password
 
 	frame += style.Gap
-
-	serverStatus := "server status"
+	frame += lipgloss.NewStyle().Align(lipgloss.Right, lipgloss.Bottom).Render("Server status:")
+	frame += "\n"
+	serverStatus := ""
+	if m.serverStatus != nil {
+		serverStatus += style.ColorRed.Render("Server is not response with error: ")
+		serverStatus += style.ColorRed.Render(m.serverStatus.Error())
+	} else {
+		serverStatus += style.ColorGreen.Render("OK")
+	}
 	serverStatus = lipgloss.NewStyle().Align(lipgloss.Right, lipgloss.Bottom).Render(serverStatus)
 	frame += serverStatus
 	return frame
