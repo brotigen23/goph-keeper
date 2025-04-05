@@ -2,30 +2,29 @@ package server
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/brotigen23/goph-keeper/server/internal/handler"
+	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 type Server struct {
 	handler *handler.Handler
-	logger  *slog.Logger
+	logger  *logger.Logger
 
 	// Service
-
 	server *http.Server
 	// middleware
 }
 
-func New(logger *slog.Logger) *Server {
+func New(logger *logger.Logger, handler *handler.Handler) *Server {
 	return &Server{
-		handler: handler.New(),
+		handler: handler,
 
 		logger: logger,
 	}
@@ -44,14 +43,16 @@ func (s Server) Run() error {
 		Addr:    ":8080",
 		Handler: router,
 	}
+
+	////////////////////////////////////////////////////
+	// START
+	////////////////////////////////////////////////////
 	s.logger.Info("server is running")
 
 	start := time.Now()
 	go func() {
 		if e := s.server.ListenAndServe(); e != nil && e != http.ErrServerClosed {
-			s.logger.Error(
-				"server error",
-				"err", e)
+			s.logger.Error(e)
 		}
 	}()
 
@@ -63,9 +64,7 @@ func (s Server) Run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := s.server.Shutdown(ctx); err != nil {
-		s.logger.Error(
-			"server error",
-			"err", err)
+		s.logger.Error(err)
 		return err
 	}
 	uptime := time.Since(start).Seconds()

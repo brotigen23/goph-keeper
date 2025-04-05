@@ -1,0 +1,666 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>server: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/brotigen23/goph-keeper/server/cmd/server/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/brotigen23/goph-keeper/server/internal/app/app.go (0.0%)</option>
+				
+				<option value="file2">github.com/brotigen23/goph-keeper/server/internal/config/config.go (0.0%)</option>
+				
+				<option value="file3">github.com/brotigen23/goph-keeper/server/internal/handler/handler.go (0.0%)</option>
+				
+				<option value="file4">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/accounts.go (0.0%)</option>
+				
+				<option value="file5">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/users.go (65.5%)</option>
+				
+				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/server/server.go (0.0%)</option>
+				
+				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/service/user_service.go (0.0%)</option>
+				
+				<option value="file8">github.com/brotigen23/goph-keeper/server/pkg/crypt/crypt.go (80.0%)</option>
+				
+				<option value="file9">github.com/brotigen23/goph-keeper/server/pkg/logger/logger.go (66.7%)</option>
+				
+				<option value="file10">github.com/brotigen23/goph-keeper/server/pkg/migration/migration.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "log"
+
+        "github.com/brotigen23/goph-keeper/server/internal/app"
+)
+
+// @title My API
+// @version 1.0
+// @description goph-keeper
+// @termsOfService http://example.com/terms/
+// @contact.name API Support
+func main() <span class="cov0" title="0">{
+        log.Println("start server... ")
+        err := app.Run()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalln(err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package app
+
+import (
+        "database/sql"
+        "os"
+        "path/filepath"
+        "time"
+
+        "github.com/brotigen23/goph-keeper/server/internal/config"
+        "github.com/brotigen23/goph-keeper/server/internal/handler"
+        "github.com/brotigen23/goph-keeper/server/internal/repository/postgres"
+        "github.com/brotigen23/goph-keeper/server/internal/server"
+        "github.com/brotigen23/goph-keeper/server/internal/service"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+        "github.com/brotigen23/goph-keeper/server/pkg/migration"
+        _ "github.com/jackc/pgx/v5/stdlib"
+)
+
+func Run() error <span class="cov0" title="0">{
+        logger := logger.New().Default()
+
+        // Config
+        err := config.LoadDotEnv()
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err)
+        }</span>
+        <span class="cov0" title="0">config := &amp;config.Config{}
+        err = config.Load()
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err)
+        }</span>
+        <span class="cov0" title="0">logger.Info("configuration", "config", config)
+
+        //DB
+        db, err := sql.Open("pgx", config.GetPostgresDSN())
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">err = migration.Migrate(db, "file://migration/")
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err)
+                return err
+        }</span>
+
+        // Repos
+        // userRepo
+        <span class="cov0" title="0">userRepo := postgres.NewUsers(nil, nil)
+
+        // Servicies
+        userService := service.NewUserService(userRepo)
+
+        //Handler
+        handler := handler.New()
+        handler.SetUserService(userService)
+
+        // Server
+        server := server.New(logger, handler)
+
+        return server.Run()</span>
+}
+
+var (
+        logPath     = filepath.Join(".", "log")
+        logFileName = logPath + "/" + time.Now().String() + ".log"
+)
+
+func createOrOpenLogFile(path string) (*os.File, error) <span class="cov0" title="0">{
+        err := os.MkdirAll(path, os.ModePerm)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">logFile, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE, 0666)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return logFile, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package config
+
+import (
+        "fmt"
+
+        "github.com/ilyakaznacheev/cleanenv"
+        "github.com/jessevdk/go-flags"
+        "github.com/joho/godotenv"
+)
+
+func LoadDotEnv() error <span class="cov0" title="0">{
+        return godotenv.Load()
+}</span>
+
+type Config struct {
+        Server struct {
+                Address string `yaml:"Adress" env:"SERVER_ADDRESS" env-default:"http://localhost:8080/"`
+        } `yaml:"server"`
+
+        Database struct {
+                User     string `yaml:"user" env:"DB_LOGIN"`
+                Password string `yaml:"password" env:"DB_PASSWORD"`
+                DBName   string `yaml:"dbname" env:"DB_NAME"`
+        } `yaml:"database"`
+}
+
+func (c *Config) Load() error <span class="cov0" title="0">{
+        err := cleanenv.ReadConfig("config/config.yml", c)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">err = cleanenv.ReadEnv(c)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">_, err = flags.Parse(c)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c Config) GetPostgresDSN() string <span class="cov0" title="0">{
+        return fmt.Sprintf(
+                `host=localhost port=5432 user=%s password=%s dbname=%s sslmode=disable`,
+                c.Database.User, c.Database.Password, c.Database.DBName,
+        )
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handler
+
+import (
+        "net/http"
+
+        "github.com/brotigen23/goph-keeper/server/internal/service"
+)
+
+type Handler struct {
+        userService *service.UserService
+}
+
+func New() *Handler <span class="cov0" title="0">{
+        return &amp;Handler{}
+}</span>
+
+func (h *Handler) SetUserService(service *service.UserService) <span class="cov0" title="0">{
+        h.userService = service
+}</span>
+
+func (h Handler) Ping(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        http.Error(w, "server response", http.StatusGone)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package postgres
+
+import (
+        "context"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+)
+
+type AccountsRepository struct{}
+
+func (r AccountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r AccountsRepository) GetByID(ctx context.Context, id int) (*model.AccountData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+func (r AccountsRepository) GetByUserID(ctx context.Context, userID int) ([]model.AccountData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r AccountsRepository) Update(context.Context, model.AccountData) (*model.AccountData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r AccountsRepository) DeleteByID(context.Context, int) (*model.AccountData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package postgres
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+        "log/slog"
+        "time"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
+        "github.com/brotigen23/goph-keeper/server/pkg/crypt"
+        "github.com/jackc/pgerrcode"
+        "github.com/lib/pq"
+)
+
+var userTable = struct {
+        name               string
+        idColumnName       string
+        loginColumnName    string
+        passwordColumnName string
+}{"users", "id", "login", "password"}
+
+type UsersRepository struct {
+        db     *sql.DB
+        logger *slog.Logger
+}
+
+func NewUsers(db *sql.DB, logger *slog.Logger) *UsersRepository <span class="cov8" title="1">{
+        return &amp;UsersRepository{
+                db:     db,
+                logger: logger,
+        }
+}</span>
+
+func (r UsersRepository) Create(ctx context.Context, login, password string) (*model.User, error) <span class="cov8" title="1">{
+
+        var createdAt time.Time
+        var id int
+
+        tx, err := r.db.Begin()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING id, created_at",
+                userTable.name,
+                userTable.loginColumnName,
+                userTable.passwordColumnName)
+
+        passHash, err := crypt.HashPassword(password)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">err = tx.QueryRowContext(ctx, query, login, passHash).Scan(&amp;id, &amp;createdAt)
+        if err != nil </span><span class="cov8" title="1">{
+                rollbackErr := tx.Rollback()
+                if rollbackErr != nil </span><span class="cov0" title="0">{
+                        return nil, rollbackErr
+                }</span>
+                <span class="cov8" title="1">if pqErr, ok := err.(*pq.Error); ok </span><span class="cov8" title="1">{
+                        if pqErr.Code == pgerrcode.UniqueViolation </span><span class="cov8" title="1">{
+                                return nil, repository.ErrUserExists
+                        }</span> else<span class="cov0" title="0"> {
+                                return nil, pqErr
+                        }</span>
+                }
+                <span class="cov0" title="0">return nil, err</span>
+        }
+        <span class="cov8" title="1">err = tx.Commit()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">savedUser := &amp;model.User{
+                ID:        id,
+                Login:     login,
+                Password:  passHash,
+                CreatedAt: createdAt,
+                UpdatedAt: createdAt,
+        }
+
+        return savedUser, nil</span>
+}
+
+func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+func (r UsersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r UsersRepository) Update(ctx context.Context, user model.User) (*model.User, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r UsersRepository) DeleteByID(ctx context.Context, id int) (*model.User, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package server
+
+import (
+        "context"
+        "net/http"
+        "os/signal"
+        "syscall"
+        "time"
+
+        "github.com/brotigen23/goph-keeper/server/internal/handler"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+        "github.com/go-chi/chi/v5"
+        "github.com/go-chi/chi/v5/middleware"
+)
+
+type Server struct {
+        handler *handler.Handler
+        logger  *logger.Logger
+
+        // Service
+        server *http.Server
+        // middleware
+}
+
+func New(logger *logger.Logger, handler *handler.Handler) *Server <span class="cov0" title="0">{
+        return &amp;Server{
+                handler: handler,
+
+                logger: logger,
+        }
+}</span>
+
+func (s Server) Run() error <span class="cov0" title="0">{
+        ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+        defer stop()
+
+        router := chi.NewRouter()
+        router.Use(middleware.Logger)
+
+        router.Get("/ping", s.handler.Ping)
+
+        s.server = &amp;http.Server{
+                Addr:    ":8080",
+                Handler: router,
+        }
+
+        ////////////////////////////////////////////////////
+        // START
+        ////////////////////////////////////////////////////
+        s.logger.Info("server is running")
+
+        start := time.Now()
+        go func() </span><span class="cov0" title="0">{
+                if e := s.server.ListenAndServe(); e != nil &amp;&amp; e != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        s.logger.Error(e)
+                }</span>
+        }()
+
+        <span class="cov0" title="0">&lt;-ctx.Done()
+        s.logger.Info("server is shutting down")
+
+        stop()
+
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        if err := s.server.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                s.logger.Error(err)
+                return err
+        }</span>
+        <span class="cov0" title="0">uptime := time.Since(start).Seconds()
+        s.logger.Info("uptime", "time", uptime)
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package service
+
+import (
+        "context"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
+)
+
+type UserService struct {
+        repo repository.Users
+}
+
+func NewUserService(repo repository.Users) *UserService <span class="cov0" title="0">{
+        return &amp;UserService{
+                repo: repo,
+        }
+}</span>
+
+func (s UserService) Create(login, password string) (*model.User, error) <span class="cov0" title="0">{
+        // Check if user already exists
+        existUser, err := s.GetUserByLogin(login)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                return existUser, ErrUserExists</span>
+        case repository.ErrUserNotFound:<span class="cov0" title="0">
+                break</span>
+        default:<span class="cov0" title="0">
+                return nil, err</span>
+        }
+        // Hash password
+
+        // Create
+        <span class="cov0" title="0">user, err := s.repo.Create(context.Background(), login, password)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return user, nil</span>
+}
+
+func (s UserService) GetUserByLogin(login string) (*model.User, error) <span class="cov0" title="0">{
+
+        return nil, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package crypt
+
+import (
+        "golang.org/x/crypto/bcrypt"
+)
+
+func HashPassword(password string) (string, error) <span class="cov8" title="1">{
+        hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov8" title="1">return string(hash), nil</span>
+}
+
+func CheckPasswordHash(password, hash string) error <span class="cov8" title="1">{
+        return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package logger
+
+import (
+        "log/slog"
+        "os"
+        "path/filepath"
+        "runtime"
+        "time"
+)
+
+// Logger
+type Logger struct {
+        logger *slog.Logger
+
+        logFile *os.File
+}
+
+func New() *Logger <span class="cov8" title="1">{
+        return &amp;Logger{
+                logger: nil,
+        }
+}</span>
+
+func (l *Logger) Default() *Logger <span class="cov8" title="1">{
+        logPath := filepath.Join(".", "log")
+        logFileName := logPath + "/" + time.Now().String() + ".log"
+
+        err := os.MkdirAll(logPath, os.ModePerm)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov8" title="1">l.logFile, err = os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE, 0666)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">l.logger = slog.New(slog.NewJSONHandler(l.logFile, nil))
+
+        return l</span>
+}
+
+func (l Logger) Error(err error) <span class="cov8" title="1">{
+        _, file, line, ok := runtime.Caller(1)
+        if !ok </span><span class="cov0" title="0">{
+                l.logger.Error("Error occurred", slog.String("error", "could not retrieve file/line"))
+                return
+        }</span>
+        <span class="cov8" title="1">l.logger.Error(
+                "Error occured",
+                "error", err.Error(),
+                slog.String("file", file), slog.Int("line", line))</span>
+}
+
+func (l Logger) Info(msg string, args ...any) <span class="cov0" title="0">{
+        l.logger.Info(msg, args...)
+}</span>
+
+func (l Logger) CloseFile() <span class="cov0" title="0">{
+        l.logFile.Close()
+}</span>
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package migration
+
+import (
+        "database/sql"
+
+        "github.com/golang-migrate/migrate"
+        "github.com/golang-migrate/migrate/database/postgres"
+        _ "github.com/golang-migrate/migrate/source/file"
+        _ "github.com/lib/pq"
+)
+
+func Migrate(db *sql.DB, path string) error <span class="cov0" title="0">{
+        driver, err := postgres.WithInstance(db, &amp;postgres.Config{})
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">m, err := migrate.NewWithDatabaseInstance(path, "pq", driver)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">err = m.Up()
+        errSource, errDB := m.Close()
+        if errSource != nil </span><span class="cov0" title="0">{
+                return errSource
+        }</span>
+        <span class="cov0" title="0">if errDB != nil </span><span class="cov0" title="0">{
+                return errDB
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

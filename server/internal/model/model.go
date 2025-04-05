@@ -21,34 +21,46 @@ type User struct {
 
 	Login    string
 	Password string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-// An entity that stores data about user accounts
+// Stores data about user accounts
 type AccountData struct {
 	ID     int
 	UserID int
 
 	Login    string
 	Password string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-// An entity that stores the user's text data
+// Stores the user's text data
 type TextData struct {
 	ID     int
 	UserID int
 
 	Data string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-// The entity that stores the user's binary data
+// Stores the user's binary data
 type BinaryData struct {
 	ID     int
 	UserID int
 
 	Data []byte
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-// The entity that stores the user's bank card information
+// Stores the user's bank card information
 type CardData struct {
 	ID     int
 	UserID int
@@ -56,13 +68,19 @@ type CardData struct {
 	Number         string
 	CardholderName string
 	Expire         time.Time
-	cvv            string
+	CVV            string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-// An entity that stores metadata about record in a certain table
+// Stores metadata about record in a certain table
 type Metadata struct {
 	ID        int
 	TableName string
 	RowID     int
 	data      string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
