@@ -28,8 +28,10 @@ type metadataRepository struct {
 	logger *logger.Logger
 }
 
-func NewMetadata() repository.Metadata {
-	return &metadataRepository{}
+func NewMetadata(db *sql.DB, logger *logger.Logger) repository.Metadata {
+	return &metadataRepository{
+		db:     db,
+		logger: logger}
 }
 
 func (r metadataRepository) Create(ctx context.Context, tableName string, rowID int, data string) (*model.Metadata, error) {
@@ -81,7 +83,7 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
 		metadataTable.tableName,
 		metadataTable.idColumnName)
 
-	err := r.db.QueryRow(query, id).
+	err := r.db.QueryRowContext(ctx, query, id).
 		Scan(&ret.TableName,
 			&ret.RowID,
 			&ret.Data,
@@ -93,7 +95,7 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
 	case sql.ErrNoRows:
 		r.logger.Info("text data not found", "id", id)
 		// TODO: return error
-		return nil, repository.ErrUserNotFound
+		return nil, repository.ErrMetadataNotFound
 	default:
 		r.logger.Error(err)
 		return nil, err
@@ -114,7 +116,7 @@ func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, ro
 		metadataTable.tableName,
 		metadataTable.rowIDColumnName)
 
-	err := r.db.QueryRow(query, rowID).
+	err := r.db.QueryRowContext(ctx, query, rowID).
 		Scan(&ret.ID,
 			&ret.TableName,
 			&ret.Data,
@@ -126,7 +128,7 @@ func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, ro
 	case sql.ErrNoRows:
 		r.logger.Info("metadata not found", "row id", rowID)
 		// TODO: return error
-		return nil, repository.ErrUserNotFound
+		return nil, repository.ErrMetadataNotFound
 	default:
 		r.logger.Error(err)
 		return nil, err

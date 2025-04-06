@@ -25,8 +25,10 @@ type accountsRepository struct {
 	logger *logger.Logger
 }
 
-func NewAccounts() repository.Accounts {
-	return &accountsRepository{}
+func NewAccounts(db *sql.DB, logger *logger.Logger) repository.Accounts {
+	return &accountsRepository{
+		db:     db,
+		logger: logger}
 }
 
 func (r accountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) {
@@ -87,7 +89,7 @@ func (r accountsRepository) GetByID(ctx context.Context, id int) (*model.Account
 		break
 	case sql.ErrNoRows:
 		r.logger.Info("account not found", "id", id)
-		return nil, repository.ErrUserNotFound
+		return nil, repository.ErrAccountsDataNotFound
 	default:
 		r.logger.Error(err)
 		return nil, err
@@ -128,6 +130,9 @@ func (r accountsRepository) GetByUserID(ctx context.Context, userID int) ([]mode
 		}
 	}
 
+	if len(ret) == 0 {
+		return nil, repository.ErrAccountsDataNotFound
+	}
 	return ret, nil
 }
 

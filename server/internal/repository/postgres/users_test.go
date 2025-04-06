@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreate(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	time := time.Now()
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
@@ -123,7 +123,8 @@ func TestCreate(t *testing.T) {
 		})
 	}
 }
-func TestGetByID(t *testing.T) {
+
+func TestGetUserByID(t *testing.T) {
 	time := time.Now()
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)

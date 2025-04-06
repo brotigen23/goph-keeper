@@ -65,19 +65,29 @@
 				
 				<option value="file4">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/accounts.go (0.0%)</option>
 				
-				<option value="file5">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/users.go (72.2%)</option>
+				<option value="file5">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/binary_data.go (0.0%)</option>
 				
-				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/server/server.go (0.0%)</option>
+				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/card_data.go (0.0%)</option>
 				
-				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/service/user_service.go (0.0%)</option>
+				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/metadata.go (0.0%)</option>
 				
-				<option value="file8">github.com/brotigen23/goph-keeper/server/pkg/crypt/crypt.go (80.0%)</option>
+				<option value="file8">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/text_data.go (47.7%)</option>
 				
-				<option value="file9">github.com/brotigen23/goph-keeper/server/pkg/logger/logger.go (60.0%)</option>
+				<option value="file9">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/users.go (71.9%)</option>
 				
-				<option value="file10">github.com/brotigen23/goph-keeper/server/pkg/migration/migration.go (0.0%)</option>
+				<option value="file10">github.com/brotigen23/goph-keeper/server/internal/server/server.go (0.0%)</option>
 				
-				<option value="file11">github.com/brotigen23/goph-keeper/server/pkg/pgErrors/pg_errors.go (60.0%)</option>
+				<option value="file11">github.com/brotigen23/goph-keeper/server/internal/service/user_data_aggregator.go (0.0%)</option>
+				
+				<option value="file12">github.com/brotigen23/goph-keeper/server/internal/service/user_service.go (0.0%)</option>
+				
+				<option value="file13">github.com/brotigen23/goph-keeper/server/pkg/crypt/crypt.go (0.0%)</option>
+				
+				<option value="file14">github.com/brotigen23/goph-keeper/server/pkg/logger/logger.go (60.0%)</option>
+				
+				<option value="file15">github.com/brotigen23/goph-keeper/server/pkg/migration/migration.go (0.0%)</option>
+				
+				<option value="file16">github.com/brotigen23/goph-keeper/server/pkg/pgErrors/pg_errors.go (60.0%)</option>
 				
 				</select>
 			</div>
@@ -276,28 +286,145 @@ func (h Handler) Ping(w http.ResponseWriter, r *http.Request) <span class="cov0"
 
 import (
         "context"
+        "database/sql"
+        "fmt"
 
         "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
 )
 
-type AccountsRepository struct{}
+var accountsTable = struct {
+        tableName           string
+        idColumnName        string
+        userIDColumnName    string
+        loginColumnName     string
+        passwordColumnName  string
+        createdAtColumnName string
+        updatedAtColumnName string
+}{"accounts", "id", "user_id", "login", "password", "created_at", "updated_at"}
 
-func (r AccountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) <span class="cov0" title="0">{
+type accountsRepository struct {
+        db     *sql.DB
+        logger *logger.Logger
+}
+
+func NewAccounts(db *sql.DB, logger *logger.Logger) repository.Accounts <span class="cov0" title="0">{
+        return &amp;accountsRepository{
+                db:     db,
+                logger: logger}
+}</span>
+
+func (r accountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) <span class="cov0" title="0">{
+        ret := &amp;model.AccountData{
+                UserID:   userID,
+                Login:    login,
+                Password: password,
+        }
+        tx, err := r.db.Begin()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s) VALUES($1, $2) RETURNING %s, %s",
+                accountsTable.tableName,
+                accountsTable.userIDColumnName,
+                accountsTable.loginColumnName,
+                accountsTable.passwordColumnName,
+                accountsTable.idColumnName,
+                accountsTable.createdAtColumnName)
+
+        err = tx.QueryRowContext(ctx, query, userID, login, password).Scan(&amp;ret.ID, &amp;ret.CreatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                rollbackErr := tx.Rollback()
+                if rollbackErr != nil </span><span class="cov0" title="0">{
+                        return nil, rollbackErr
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov0" title="0">err = tx.Commit()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">ret.UpdatedAt = ret.CreatedAt
+        return ret, nil</span>
+}
+
+func (r accountsRepository) GetByID(ctx context.Context, id int) (*model.AccountData, error) <span class="cov0" title="0">{
+        ret := &amp;model.AccountData{}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                accountsTable.userIDColumnName,
+                accountsTable.loginColumnName,
+                accountsTable.passwordColumnName,
+                accountsTable.createdAtColumnName,
+                accountsTable.updatedAtColumnName,
+                accountsTable.tableName,
+                accountsTable.idColumnName)
+
+        err := r.db.QueryRow(query, id).
+                Scan(&amp;ret.UserID,
+                        &amp;ret.Login,
+                        &amp;ret.Password,
+                        &amp;ret.CreatedAt,
+                        &amp;ret.UpdatedAt)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                break</span>
+        case sql.ErrNoRows:<span class="cov0" title="0">
+                r.logger.Info("account not found", "id", id)
+                return nil, repository.ErrAccountsDataNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+func (r accountsRepository) GetByUserID(ctx context.Context, userID int) ([]model.AccountData, error) <span class="cov0" title="0">{
+
+        ret := []model.AccountData{}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                accountsTable.idColumnName,
+                accountsTable.loginColumnName,
+                accountsTable.passwordColumnName,
+                accountsTable.createdAtColumnName,
+                accountsTable.updatedAtColumnName,
+                accountsTable.tableName,
+                accountsTable.userIDColumnName)
+
+        rows, err := r.db.Query(query, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                r.logger.Error(err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">for rows.Next() </span><span class="cov0" title="0">{
+                ret = append(ret, model.AccountData{UserID: userID})
+                err = rows.Scan(
+                        &amp;ret[len(ret)-1].ID,
+                        &amp;ret[len(ret)-1].Login,
+                        &amp;ret[len(ret)-1].Password,
+                        &amp;ret[len(ret)-1].CreatedAt,
+                        &amp;ret[len(ret)-1].UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error(err)
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov0" title="0">if len(ret) == 0 </span><span class="cov0" title="0">{
+                return nil, repository.ErrAccountsDataNotFound
+        }</span>
+        <span class="cov0" title="0">return ret, nil</span>
+}
+
+func (r accountsRepository) Update(context.Context, model.AccountData) (*model.AccountData, error) <span class="cov0" title="0">{
         return nil, nil
 }</span>
 
-func (r AccountsRepository) GetByID(ctx context.Context, id int) (*model.AccountData, error) <span class="cov0" title="0">{
-        return nil, nil
-}</span>
-func (r AccountsRepository) GetByUserID(ctx context.Context, userID int) ([]model.AccountData, error) <span class="cov0" title="0">{
-        return nil, nil
-}</span>
-
-func (r AccountsRepository) Update(context.Context, model.AccountData) (*model.AccountData, error) <span class="cov0" title="0">{
-        return nil, nil
-}</span>
-
-func (r AccountsRepository) DeleteByID(context.Context, int) (*model.AccountData, error) <span class="cov0" title="0">{
+func (r accountsRepository) DeleteByID(context.Context, int) (*model.AccountData, error) <span class="cov0" title="0">{
         return nil, nil
 }</span>
 </pre>
@@ -308,11 +435,610 @@ import (
         "context"
         "database/sql"
         "fmt"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+)
+
+var binaryTable = struct {
+        tableName string
+
+        idColumnName     string
+        userIDColumnName string
+
+        dataColumnName string
+
+        createdAtColumnName string
+        updatedAtColumnName string
+}{"binary_data", "id", "user_id", "data", "created_at", "updated_at"}
+
+type binaryRepository struct {
+        db     *sql.DB
+        logger *logger.Logger
+}
+
+func NewBinary(db *sql.DB, logger *logger.Logger) repository.Binary <span class="cov0" title="0">{
+        return &amp;binaryRepository{
+                db:     db,
+                logger: logger}
+}</span>
+
+func (r binaryRepository) Create(ctx context.Context, userID int, data []byte) (*model.BinaryData, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.BinaryData{
+                UserID: userID,
+                Data:   data,
+        }
+        tx, err := r.db.Begin()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s",
+                binaryTable.tableName,
+                binaryTable.userIDColumnName,
+                binaryTable.dataColumnName,
+                binaryTable.idColumnName,
+                binaryTable.createdAtColumnName)
+
+        err = tx.QueryRowContext(ctx, query, userID, data).Scan(&amp;ret.ID, &amp;ret.CreatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                rollbackErr := tx.Rollback()
+                if rollbackErr != nil </span><span class="cov0" title="0">{
+                        return nil, rollbackErr
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov0" title="0">err = tx.Commit()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">ret.UpdatedAt = ret.CreatedAt
+        return ret, nil</span>
+}
+
+func (r binaryRepository) GetByID(ctx context.Context, id int) (*model.BinaryData, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.BinaryData{ID: id}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
+                binaryTable.userIDColumnName,
+                binaryTable.dataColumnName,
+                binaryTable.createdAtColumnName,
+                binaryTable.updatedAtColumnName,
+                binaryTable.tableName,
+                binaryTable.idColumnName)
+
+        err := r.db.QueryRowContext(ctx, query, id).
+                Scan(&amp;ret.UserID,
+                        &amp;ret.Data,
+                        &amp;ret.CreatedAt,
+                        &amp;ret.UpdatedAt)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                break</span>
+        case sql.ErrNoRows:<span class="cov0" title="0">
+                r.logger.Info("text data not found", "id", id)
+                // TODO: return error
+                return nil, repository.ErrUserNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+func (r binaryRepository) GetByUserID(ctx context.Context, userID int) ([]model.BinaryData, error) <span class="cov0" title="0">{
+
+        ret := []model.BinaryData{}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
+                textDataTable.idColumnName,
+                textDataTable.dataColumnName,
+                textDataTable.createdAtColumnName,
+                textDataTable.updatedAtColumnName,
+                textDataTable.tableName,
+                textDataTable.userIDColumnName)
+
+        rows, err := r.db.QueryContext(ctx, query, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                r.logger.Error(err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">for rows.Next() </span><span class="cov0" title="0">{
+                ret = append(ret, model.BinaryData{UserID: userID})
+                err = rows.Scan(
+                        &amp;ret[len(ret)-1].ID,
+                        &amp;ret[len(ret)-1].Data,
+                        &amp;ret[len(ret)-1].CreatedAt,
+                        &amp;ret[len(ret)-1].UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error(err)
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+
+func (r binaryRepository) Update(context.Context, model.BinaryData) (*model.BinaryData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r binaryRepository) DeleteByID(context.Context, int) (*model.BinaryData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package postgres
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
         "time"
 
         "github.com/brotigen23/goph-keeper/server/internal/model"
         "github.com/brotigen23/goph-keeper/server/internal/repository"
-        "github.com/brotigen23/goph-keeper/server/pkg/crypt"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+)
+
+var cardsTable = struct {
+        tableName string
+
+        idColumnName     string
+        userIDColumnName string
+
+        numberColumnName         string
+        cardholderNameColumnName string
+        expireColumnName         string
+        cvvColumnName            string
+
+        createdAtColumnName string
+        updatedAtColumnName string
+}{"accounts", "id", "user_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
+
+type cardsRepository struct {
+        db     *sql.DB
+        logger *logger.Logger
+}
+
+func NewCards(db *sql.DB, logger *logger.Logger) repository.Cards <span class="cov0" title="0">{
+        return &amp;cardsRepository{
+                db:     db,
+                logger: logger}
+}</span>
+
+func (r cardsRepository) Create(
+        ctx context.Context,
+        userID int, number, cardholderName string,
+        expireAt time.Time, cvv string) (*model.CardData, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.CardData{
+                UserID:         userID,
+                Number:         number,
+                CardholderName: cardholderName,
+                Expire:         expireAt,
+                CVV:            cvv,
+        }
+        tx, err := r.db.Begin()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s, %s, %s) VALUES($1, $2, $3, $4) RETURNING %s, %s",
+                cardsTable.tableName,
+                cardsTable.userIDColumnName,
+                cardsTable.numberColumnName,
+                cardsTable.cardholderNameColumnName,
+                cardsTable.expireColumnName,
+                cardsTable.cvvColumnName,
+                cardsTable.idColumnName,
+                cardsTable.createdAtColumnName)
+
+        err = tx.QueryRowContext(ctx, query, userID, number, cardholderName, expireAt, cvv).Scan(&amp;ret.ID, &amp;ret.CreatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                rollbackErr := tx.Rollback()
+                if rollbackErr != nil </span><span class="cov0" title="0">{
+                        return nil, rollbackErr
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov0" title="0">err = tx.Commit()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">ret.UpdatedAt = ret.CreatedAt
+        return ret, nil</span>
+}
+
+func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.CardData{ID: id}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                cardsTable.userIDColumnName,
+                cardsTable.numberColumnName,
+                cardsTable.cardholderNameColumnName,
+                cardsTable.expireColumnName,
+                cardsTable.cvvColumnName,
+                cardsTable.createdAtColumnName,
+                cardsTable.updatedAtColumnName,
+                cardsTable.tableName,
+                cardsTable.idColumnName)
+
+        err := r.db.QueryRowContext(ctx, query, id).
+                Scan(&amp;ret.UserID,
+                        &amp;ret.Number,
+                        &amp;ret.CardholderName,
+                        &amp;ret.Expire,
+                        &amp;ret.CVV,
+                        &amp;ret.CreatedAt,
+                        &amp;ret.UpdatedAt)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                break</span>
+        case sql.ErrNoRows:<span class="cov0" title="0">
+                r.logger.Info("card info not found", "id", id)
+                // TODO: return error
+                return nil, repository.ErrCardsDataNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.CardData, error) <span class="cov0" title="0">{
+
+        ret := []model.CardData{}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                cardsTable.idColumnName,
+                cardsTable.numberColumnName,
+                cardsTable.cardholderNameColumnName,
+                cardsTable.expireColumnName,
+                cardsTable.cvvColumnName,
+                cardsTable.createdAtColumnName,
+                cardsTable.updatedAtColumnName,
+                cardsTable.tableName,
+                cardsTable.userIDColumnName)
+
+        rows, err := r.db.QueryContext(ctx, query, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                r.logger.Error(err)
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">for rows.Next() </span><span class="cov0" title="0">{
+                ret = append(ret, model.CardData{UserID: userID})
+                err = rows.Scan(
+                        &amp;ret[len(ret)-1].ID,
+                        &amp;ret[len(ret)-1].Number,
+                        &amp;ret[len(ret)-1].CardholderName,
+                        &amp;ret[len(ret)-1].Expire,
+                        &amp;ret[len(ret)-1].CVV,
+                        &amp;ret[len(ret)-1].CreatedAt,
+                        &amp;ret[len(ret)-1].UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error(err)
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov0" title="0">if len(ret) == 0 </span><span class="cov0" title="0">{
+                return nil, repository.ErrCardsDataNotFound
+        }</span>
+        <span class="cov0" title="0">return ret, nil</span>
+}
+
+func (r cardsRepository) Update(context.Context, model.CardData) (*model.CardData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r cardsRepository) DeleteByID(context.Context, int) (*model.CardData, error) <span class="cov0" title="0">{ return nil, nil }</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package postgres
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+)
+
+var metadataTable = struct {
+        tableName string
+
+        idColumnName        string
+        tableNameColumnName string
+        rowIDColumnName     string
+
+        dataColumnName string
+
+        createdAtColumnName string
+        updatedAtColumnName string
+}{"accounts", "id", "table_name", "row_id", "data", "created_at", "updated_at"}
+
+type metadataRepository struct {
+        db     *sql.DB
+        logger *logger.Logger
+}
+
+func NewMetadata(db *sql.DB, logger *logger.Logger) repository.Metadata <span class="cov0" title="0">{
+        return &amp;metadataRepository{
+                db:     db,
+                logger: logger}
+}</span>
+
+func (r metadataRepository) Create(ctx context.Context, tableName string, rowID int, data string) (*model.Metadata, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.Metadata{
+                TableName: tableName,
+                RowID:     rowID,
+                Data:      data,
+        }
+        tx, err := r.db.Begin()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s) VALUES($1, $2, $3) RETURNING %s, %s",
+                metadataTable.tableName,
+                metadataTable.tableNameColumnName,
+                metadataTable.rowIDColumnName,
+                metadataTable.dataColumnName,
+                metadataTable.idColumnName,
+                metadataTable.createdAtColumnName)
+
+        err = tx.QueryRowContext(ctx, query, tableName, rowID, data).Scan(&amp;ret.ID, &amp;ret.CreatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                rollbackErr := tx.Rollback()
+                if rollbackErr != nil </span><span class="cov0" title="0">{
+                        return nil, rollbackErr
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov0" title="0">err = tx.Commit()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">ret.UpdatedAt = ret.CreatedAt
+        return ret, nil</span>
+}
+
+func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadata, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.Metadata{ID: id}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                metadataTable.tableNameColumnName,
+                metadataTable.rowIDColumnName,
+                metadataTable.dataColumnName,
+                metadataTable.createdAtColumnName,
+                metadataTable.updatedAtColumnName,
+                metadataTable.tableName,
+                metadataTable.idColumnName)
+
+        err := r.db.QueryRowContext(ctx, query, id).
+                Scan(&amp;ret.TableName,
+                        &amp;ret.RowID,
+                        &amp;ret.Data,
+                        &amp;ret.CreatedAt,
+                        &amp;ret.UpdatedAt)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                break</span>
+        case sql.ErrNoRows:<span class="cov0" title="0">
+                r.logger.Info("text data not found", "id", id)
+                // TODO: return error
+                return nil, repository.ErrMetadataNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, rowID int) (*model.Metadata, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.Metadata{RowID: rowID}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                metadataTable.idColumnName,
+                metadataTable.tableNameColumnName,
+                metadataTable.dataColumnName,
+                metadataTable.createdAtColumnName,
+                metadataTable.updatedAtColumnName,
+                metadataTable.tableName,
+                metadataTable.rowIDColumnName)
+
+        err := r.db.QueryRowContext(ctx, query, rowID).
+                Scan(&amp;ret.ID,
+                        &amp;ret.TableName,
+                        &amp;ret.Data,
+                        &amp;ret.CreatedAt,
+                        &amp;ret.UpdatedAt)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                break</span>
+        case sql.ErrNoRows:<span class="cov0" title="0">
+                r.logger.Info("metadata not found", "row id", rowID)
+                // TODO: return error
+                return nil, repository.ErrMetadataNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+
+func (r metadataRepository) Update(context.Context, model.Metadata) (*model.Metadata, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r metadataRepository) DeleteByID(context.Context, int) (*model.Metadata, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package postgres
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+)
+
+var textDataTable = struct {
+        tableName           string
+        idColumnName        string
+        userIDColumnName    string
+        dataColumnName      string
+        createdAtColumnName string
+        updatedAtColumnName string
+}{"text_data", "id", "user_id", "data", "created_at", "updated_at"}
+
+type textRepository struct {
+        db     *sql.DB
+        logger *logger.Logger
+}
+
+func NewTextDataRepository(db *sql.DB, logger *logger.Logger) repository.Text <span class="cov8" title="1">{
+        return &amp;textRepository{
+                db:     db,
+                logger: logger}
+}</span>
+
+func (r textRepository) Create(ctx context.Context, userID int, data string) (*model.TextData, error) <span class="cov8" title="1">{
+
+        ret := &amp;model.TextData{
+                UserID: userID,
+                Data:   data,
+        }
+        tx, err := r.db.Begin()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s",
+                textDataTable.tableName,
+                textDataTable.userIDColumnName,
+                textDataTable.dataColumnName,
+                textDataTable.idColumnName,
+                textDataTable.createdAtColumnName)
+
+        err = tx.QueryRowContext(ctx, query, userID, data).Scan(&amp;ret.ID, &amp;ret.CreatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                rollbackErr := tx.Rollback()
+                if rollbackErr != nil </span><span class="cov0" title="0">{
+                        return nil, rollbackErr
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov8" title="1">err = tx.Commit()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">ret.UpdatedAt = ret.CreatedAt
+        return ret, nil</span>
+}
+
+func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, error) <span class="cov0" title="0">{
+
+        ret := &amp;model.TextData{ID: id}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
+                textDataTable.userIDColumnName,
+                textDataTable.dataColumnName,
+                textDataTable.createdAtColumnName,
+                textDataTable.updatedAtColumnName,
+                textDataTable.tableName,
+                textDataTable.idColumnName)
+
+        err := r.db.QueryRowContext(ctx, query, id).
+                Scan(&amp;ret.UserID,
+                        &amp;ret.Data,
+                        &amp;ret.CreatedAt,
+                        &amp;ret.UpdatedAt)
+        switch err </span>{
+        case nil:<span class="cov0" title="0">
+                break</span>
+        case sql.ErrNoRows:<span class="cov0" title="0">
+                r.logger.Info("text data not found", "id", id)
+                return nil, repository.ErrTextDataNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov0" title="0">return ret, nil</span>
+}
+func (r textRepository) GetByUserID(ctx context.Context, userID int) ([]model.TextData, error) <span class="cov8" title="1">{
+
+        ret := []model.TextData{}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
+                textDataTable.idColumnName,
+                textDataTable.dataColumnName,
+                textDataTable.createdAtColumnName,
+                textDataTable.updatedAtColumnName,
+                textDataTable.tableName,
+                textDataTable.userIDColumnName)
+
+        rows, err := r.db.QueryContext(ctx, query, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                r.logger.Error(err)
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">for rows.Next() </span><span class="cov8" title="1">{
+                ret = append(ret, model.TextData{UserID: userID})
+                err = rows.Scan(
+                        &amp;ret[len(ret)-1].ID,
+                        &amp;ret[len(ret)-1].Data,
+                        &amp;ret[len(ret)-1].CreatedAt,
+                        &amp;ret[len(ret)-1].UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error(err)
+                        return nil, err
+                }</span>
+        }
+        <span class="cov8" title="1">if len(ret) == 0 </span><span class="cov0" title="0">{
+                return nil, repository.ErrTextDataNotFound
+        }</span>
+        <span class="cov8" title="1">return ret, nil</span>
+}
+
+func (r textRepository) Update(context.Context, model.TextData) (*model.TextData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+
+func (r textRepository) DeleteByID(context.Context, int) (*model.TextData, error) <span class="cov0" title="0">{
+        return nil, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package postgres
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+
+        "github.com/brotigen23/goph-keeper/server/internal/model"
+        "github.com/brotigen23/goph-keeper/server/internal/repository"
         "github.com/brotigen23/goph-keeper/server/pkg/logger"
         "github.com/brotigen23/goph-keeper/server/pkg/pgErrors"
 )
@@ -326,38 +1052,36 @@ var userTable = struct {
         updatedAtColumnName string
 }{"users", "id", "login", "password", "created_at", "updated_at"}
 
-type UsersRepository struct {
+type usersRepository struct {
         db     *sql.DB
         logger *logger.Logger
 }
 
-func NewUsers(db *sql.DB, logger *logger.Logger) *UsersRepository <span class="cov8" title="1">{
-        return &amp;UsersRepository{
+func NewUsers(db *sql.DB, logger *logger.Logger) repository.Users <span class="cov8" title="1">{
+        return &amp;usersRepository{
                 db:     db,
                 logger: logger,
         }
 }</span>
 
-func (r UsersRepository) Create(ctx context.Context, login, password string) (*model.User, error) <span class="cov8" title="1">{
+func (r usersRepository) Create(ctx context.Context, login, password string) (*model.User, error) <span class="cov8" title="1">{
 
-        var createdAt time.Time
-        var id int
-
+        ret := &amp;model.User{
+                Login:    login,
+                Password: password,
+        }
         tx, err := r.db.Begin()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING id, created_at",
+        <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s",
                 userTable.tableName,
                 userTable.loginColumnName,
-                userTable.passwordColumnName)
+                userTable.passwordColumnName,
+                userTable.idColumnName,
+                userTable.createdAtColumnName)
 
-        passHash, err := crypt.HashPassword(password)
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, err
-        }</span>
-
-        <span class="cov8" title="1">err = tx.QueryRowContext(ctx, query, login, passHash).Scan(&amp;id, &amp;createdAt)
+        err = tx.QueryRowContext(ctx, query, login, password).Scan(&amp;ret.ID, &amp;ret.CreatedAt)
         if err != nil </span><span class="cov8" title="1">{
                 rollbackErr := tx.Rollback()
                 if rollbackErr != nil </span><span class="cov0" title="0">{
@@ -373,19 +1097,11 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-
-        <span class="cov8" title="1">savedUser := &amp;model.User{
-                ID:        id,
-                Login:     login,
-                Password:  passHash,
-                CreatedAt: createdAt,
-                UpdatedAt: createdAt,
-        }
-
-        return savedUser, nil</span>
+        <span class="cov8" title="1">ret.UpdatedAt = ret.CreatedAt
+        return ret, nil</span>
 }
 
-func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) <span class="cov8" title="1">{
+func (r usersRepository) GetByID(ctx context.Context, id int) (*model.User, error) <span class="cov8" title="1">{
         ret := &amp;model.User{}
 
         query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
@@ -397,7 +1113,8 @@ func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, erro
                 userTable.tableName,
                 userTable.idColumnName)
 
-        err := r.db.QueryRow(query, id).Scan(&amp;ret.ID, &amp;ret.Login, &amp;ret.Password, &amp;ret.CreatedAt, &amp;ret.UpdatedAt)
+        err := r.db.QueryRowContext(ctx, query, id).
+                Scan(&amp;ret.ID, &amp;ret.Login, &amp;ret.Password, &amp;ret.CreatedAt, &amp;ret.UpdatedAt)
 
         switch err </span>{
         case nil:<span class="cov8" title="1">
@@ -413,20 +1130,20 @@ func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, erro
         <span class="cov8" title="1">return ret, nil</span>
 }
 
-func (r UsersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) <span class="cov0" title="0">{
+func (r usersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) <span class="cov0" title="0">{
         return nil, nil
 }</span>
 
-func (r UsersRepository) Update(ctx context.Context, user model.User) (*model.User, error) <span class="cov0" title="0">{
+func (r usersRepository) Update(ctx context.Context, user model.User) (*model.User, error) <span class="cov0" title="0">{
         return nil, nil
 }</span>
 
-func (r UsersRepository) DeleteByID(ctx context.Context, id int) (*model.User, error) <span class="cov0" title="0">{
+func (r usersRepository) DeleteByID(ctx context.Context, id int) (*model.User, error) <span class="cov0" title="0">{
         return nil, nil
 }</span>
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package server
+		<pre class="file" id="file10" style="display: none">package server
 
 import (
         "context"
@@ -501,13 +1218,27 @@ func (s Server) Run() error <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package service
+		<pre class="file" id="file11" style="display: none">package service
+
+type UserDataAggregator struct {
+        // Servicies
+}
+
+func NewAggregator() *UserDataAggregator <span class="cov0" title="0">{
+        return &amp;UserDataAggregator{}
+}</span>
+
+func (a UserDataAggregator) GetUserAccountsData() {<span class="cov0" title="0">}</span>
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package service
 
 import (
         "context"
 
         "github.com/brotigen23/goph-keeper/server/internal/model"
         "github.com/brotigen23/goph-keeper/server/internal/repository"
+        "github.com/brotigen23/goph-keeper/server/pkg/crypt"
 )
 
 type UserService struct {
@@ -532,9 +1263,12 @@ func (s UserService) Create(login, password string) (*model.User, error) <span c
                 return nil, err</span>
         }
         // Hash password
-
+        <span class="cov0" title="0">passHash, err := crypt.HashPassword(password)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
         // Create
-        <span class="cov0" title="0">user, err := s.repo.Create(context.Background(), login, password)
+        <span class="cov0" title="0">user, err := s.repo.Create(context.Background(), login, passHash)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
@@ -547,26 +1281,26 @@ func (s UserService) GetUserByLogin(login string) (*model.User, error) <span cla
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package crypt
+		<pre class="file" id="file13" style="display: none">package crypt
 
 import (
         "golang.org/x/crypto/bcrypt"
 )
 
-func HashPassword(password string) (string, error) <span class="cov8" title="1">{
+func HashPassword(password string) (string, error) <span class="cov0" title="0">{
         hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
         if err != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
-        <span class="cov8" title="1">return string(hash), nil</span>
+        <span class="cov0" title="0">return string(hash), nil</span>
 }
 
-func CheckPasswordHash(password, hash string) error <span class="cov8" title="1">{
+func CheckPasswordHash(password, hash string) error <span class="cov0" title="0">{
         return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }</span>
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package logger
+		<pre class="file" id="file14" style="display: none">package logger
 
 import (
         "log/slog"
@@ -634,7 +1368,7 @@ func (l Logger) CloseFile() <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package migration
+		<pre class="file" id="file15" style="display: none">package migration
 
 import (
         "database/sql"
@@ -666,7 +1400,7 @@ func Migrate(db *sql.DB, path string) error <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file11" style="display: none">package pgErrors
+		<pre class="file" id="file16" style="display: none">package pgErrors
 
 import (
         "github.com/jackc/pgerrcode"

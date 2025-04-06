@@ -27,8 +27,10 @@ type binaryRepository struct {
 	logger *logger.Logger
 }
 
-func NewBinary() repository.Binary {
-	return &binaryRepository{}
+func NewBinary(db *sql.DB, logger *logger.Logger) repository.Binary {
+	return &binaryRepository{
+		db:     db,
+		logger: logger}
 }
 
 func (r binaryRepository) Create(ctx context.Context, userID int, data []byte) (*model.BinaryData, error) {
@@ -77,7 +79,7 @@ func (r binaryRepository) GetByID(ctx context.Context, id int) (*model.BinaryDat
 		binaryTable.tableName,
 		binaryTable.idColumnName)
 
-	err := r.db.QueryRow(query, id).
+	err := r.db.QueryRowContext(ctx, query, id).
 		Scan(&ret.UserID,
 			&ret.Data,
 			&ret.CreatedAt,
@@ -108,7 +110,7 @@ func (r binaryRepository) GetByUserID(ctx context.Context, userID int) ([]model.
 		textDataTable.tableName,
 		textDataTable.userIDColumnName)
 
-	rows, err := r.db.Query(query, userID)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		r.logger.Error(err)
 		return nil, err

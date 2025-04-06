@@ -81,7 +81,8 @@ func (r usersRepository) GetByID(ctx context.Context, id int) (*model.User, erro
 		userTable.tableName,
 		userTable.idColumnName)
 
-	err := r.db.QueryRow(query, id).Scan(&ret.ID, &ret.Login, &ret.Password, &ret.CreatedAt, &ret.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).
+		Scan(&ret.ID, &ret.Login, &ret.Password, &ret.CreatedAt, &ret.UpdatedAt)
 
 	switch err {
 	case nil:

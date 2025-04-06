@@ -24,8 +24,10 @@ type textRepository struct {
 	logger *logger.Logger
 }
 
-func NewTextDataRepository() repository.Text {
-	return &textRepository{}
+func NewTextDataRepository(db *sql.DB, logger *logger.Logger) repository.Text {
+	return &textRepository{
+		db:     db,
+		logger: logger}
 }
 
 func (r textRepository) Create(ctx context.Context, userID int, data string) (*model.TextData, error) {
@@ -74,7 +76,7 @@ func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, e
 		textDataTable.tableName,
 		textDataTable.idColumnName)
 
-	err := r.db.QueryRow(query, id).
+	err := r.db.QueryRowContext(ctx, query, id).
 		Scan(&ret.UserID,
 			&ret.Data,
 			&ret.CreatedAt,
@@ -84,8 +86,7 @@ func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, e
 		break
 	case sql.ErrNoRows:
 		r.logger.Info("text data not found", "id", id)
-		// TODO: return error
-		return nil, repository.ErrUserNotFound
+		return nil, repository.ErrTextDataNotFound
 	default:
 		r.logger.Error(err)
 		return nil, err
@@ -105,7 +106,7 @@ func (r textRepository) GetByUserID(ctx context.Context, userID int) ([]model.Te
 		textDataTable.tableName,
 		textDataTable.userIDColumnName)
 
-	rows, err := r.db.Query(query, userID)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		r.logger.Error(err)
 		return nil, err
@@ -123,7 +124,9 @@ func (r textRepository) GetByUserID(ctx context.Context, userID int) ([]model.Te
 			return nil, err
 		}
 	}
-
+	if len(ret) == 0 {
+		return nil, repository.ErrTextDataNotFound
+	}
 	return ret, nil
 }
 

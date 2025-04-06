@@ -31,8 +31,10 @@ type cardsRepository struct {
 	logger *logger.Logger
 }
 
-func NewCards() repository.Cards {
-	return &cardsRepository{}
+func NewCards(db *sql.DB, logger *logger.Logger) repository.Cards {
+	return &cardsRepository{
+		db:     db,
+		logger: logger}
 }
 
 func (r cardsRepository) Create(
@@ -93,7 +95,7 @@ func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, 
 		cardsTable.tableName,
 		cardsTable.idColumnName)
 
-	err := r.db.QueryRow(query, id).
+	err := r.db.QueryRowContext(ctx, query, id).
 		Scan(&ret.UserID,
 			&ret.Number,
 			&ret.CardholderName,
@@ -107,7 +109,7 @@ func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, 
 	case sql.ErrNoRows:
 		r.logger.Info("card info not found", "id", id)
 		// TODO: return error
-		return nil, repository.ErrUserNotFound
+		return nil, repository.ErrCardsDataNotFound
 	default:
 		r.logger.Error(err)
 		return nil, err
@@ -130,7 +132,7 @@ func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.C
 		cardsTable.tableName,
 		cardsTable.userIDColumnName)
 
-	rows, err := r.db.Query(query, userID)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		r.logger.Error(err)
 		return nil, err
@@ -152,6 +154,9 @@ func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.C
 		}
 	}
 
+	if len(ret) == 0 {
+		return nil, repository.ErrCardsDataNotFound
+	}
 	return ret, nil
 }
 
