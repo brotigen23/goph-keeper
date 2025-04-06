@@ -65,7 +65,7 @@
 				
 				<option value="file4">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/accounts.go (0.0%)</option>
 				
-				<option value="file5">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/users.go (65.5%)</option>
+				<option value="file5">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/users.go (72.2%)</option>
 				
 				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/server/server.go (0.0%)</option>
 				
@@ -73,9 +73,11 @@
 				
 				<option value="file8">github.com/brotigen23/goph-keeper/server/pkg/crypt/crypt.go (80.0%)</option>
 				
-				<option value="file9">github.com/brotigen23/goph-keeper/server/pkg/logger/logger.go (66.7%)</option>
+				<option value="file9">github.com/brotigen23/goph-keeper/server/pkg/logger/logger.go (60.0%)</option>
 				
 				<option value="file10">github.com/brotigen23/goph-keeper/server/pkg/migration/migration.go (0.0%)</option>
+				
+				<option value="file11">github.com/brotigen23/goph-keeper/server/pkg/pgErrors/pg_errors.go (60.0%)</option>
 				
 				</select>
 			</div>
@@ -306,29 +308,30 @@ import (
         "context"
         "database/sql"
         "fmt"
-        "log/slog"
         "time"
 
         "github.com/brotigen23/goph-keeper/server/internal/model"
         "github.com/brotigen23/goph-keeper/server/internal/repository"
         "github.com/brotigen23/goph-keeper/server/pkg/crypt"
-        "github.com/jackc/pgerrcode"
-        "github.com/lib/pq"
+        "github.com/brotigen23/goph-keeper/server/pkg/logger"
+        "github.com/brotigen23/goph-keeper/server/pkg/pgErrors"
 )
 
 var userTable = struct {
-        name               string
-        idColumnName       string
-        loginColumnName    string
-        passwordColumnName string
-}{"users", "id", "login", "password"}
+        tableName           string
+        idColumnName        string
+        loginColumnName     string
+        passwordColumnName  string
+        createdAtColumnName string
+        updatedAtColumnName string
+}{"users", "id", "login", "password", "created_at", "updated_at"}
 
 type UsersRepository struct {
         db     *sql.DB
-        logger *slog.Logger
+        logger *logger.Logger
 }
 
-func NewUsers(db *sql.DB, logger *slog.Logger) *UsersRepository <span class="cov8" title="1">{
+func NewUsers(db *sql.DB, logger *logger.Logger) *UsersRepository <span class="cov8" title="1">{
         return &amp;UsersRepository{
                 db:     db,
                 logger: logger,
@@ -345,7 +348,7 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
                 return nil, err
         }</span>
         <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING id, created_at",
-                userTable.name,
+                userTable.tableName,
                 userTable.loginColumnName,
                 userTable.passwordColumnName)
 
@@ -353,21 +356,19 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
+
         <span class="cov8" title="1">err = tx.QueryRowContext(ctx, query, login, passHash).Scan(&amp;id, &amp;createdAt)
         if err != nil </span><span class="cov8" title="1">{
                 rollbackErr := tx.Rollback()
                 if rollbackErr != nil </span><span class="cov0" title="0">{
                         return nil, rollbackErr
                 }</span>
-                <span class="cov8" title="1">if pqErr, ok := err.(*pq.Error); ok </span><span class="cov8" title="1">{
-                        if pqErr.Code == pgerrcode.UniqueViolation </span><span class="cov8" title="1">{
-                                return nil, repository.ErrUserExists
-                        }</span> else<span class="cov0" title="0"> {
-                                return nil, pqErr
-                        }</span>
-                }
+                <span class="cov8" title="1">if pgErrors.CheckIfUniqueViolation(err) </span><span class="cov8" title="1">{
+                        return nil, repository.ErrUserExists
+                }</span>
                 <span class="cov0" title="0">return nil, err</span>
         }
+
         <span class="cov8" title="1">err = tx.Commit()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
@@ -384,9 +385,34 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
         return savedUser, nil</span>
 }
 
-func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) <span class="cov0" title="0">{
-        return nil, nil
-}</span>
+func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) <span class="cov8" title="1">{
+        ret := &amp;model.User{}
+
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+                userTable.idColumnName,
+                userTable.loginColumnName,
+                userTable.passwordColumnName,
+                userTable.createdAtColumnName,
+                userTable.updatedAtColumnName,
+                userTable.tableName,
+                userTable.idColumnName)
+
+        err := r.db.QueryRow(query, id).Scan(&amp;ret.ID, &amp;ret.Login, &amp;ret.Password, &amp;ret.CreatedAt, &amp;ret.UpdatedAt)
+
+        switch err </span>{
+        case nil:<span class="cov8" title="1">
+                break</span>
+        case sql.ErrNoRows:<span class="cov8" title="1">
+                r.logger.Info("user not found", "userID", id)
+                return nil, repository.ErrUserNotFound</span>
+        default:<span class="cov0" title="0">
+                r.logger.Error(err)
+                return nil, err</span>
+        }
+
+        <span class="cov8" title="1">return ret, nil</span>
+}
+
 func (r UsersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) <span class="cov0" title="0">{
         return nil, nil
 }</span>
@@ -581,6 +607,12 @@ func (l *Logger) Default() *Logger <span class="cov8" title="1">{
         return l</span>
 }
 
+func (l *Logger) Testing() *Logger <span class="cov0" title="0">{
+        l.logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+
+        return l
+}</span>
+
 func (l Logger) Error(err error) <span class="cov8" title="1">{
         _, file, line, ok := runtime.Caller(1)
         if !ok </span><span class="cov0" title="0">{
@@ -631,6 +663,25 @@ func Migrate(db *sql.DB, path string) error <span class="cov0" title="0">{
                 return errDB
         }</span>
         <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package pgErrors
+
+import (
+        "github.com/jackc/pgerrcode"
+        "github.com/lib/pq"
+)
+
+func CheckIfUniqueViolation(err error) bool <span class="cov8" title="1">{
+        if pqErr, ok := err.(*pq.Error); ok </span><span class="cov8" title="1">{
+                if pqErr.Code == pgerrcode.UniqueViolation </span><span class="cov8" title="1">{
+                        return true
+                }</span> else<span class="cov0" title="0"> {
+                        return false
+                }</span>
+        }
+        <span class="cov0" title="0">return false</span>
 }
 </pre>
 		

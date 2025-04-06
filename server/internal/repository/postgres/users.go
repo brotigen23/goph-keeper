@@ -4,28 +4,30 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
 	"github.com/brotigen23/goph-keeper/server/pkg/crypt"
+	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/brotigen23/goph-keeper/server/pkg/pgErrors"
 )
 
 var userTable = struct {
-	name               string
-	idColumnName       string
-	loginColumnName    string
-	passwordColumnName string
-}{"users", "id", "login", "password"}
+	tableName           string
+	idColumnName        string
+	loginColumnName     string
+	passwordColumnName  string
+	createdAtColumnName string
+	updatedAtColumnName string
+}{"users", "id", "login", "password", "created_at", "updated_at"}
 
 type UsersRepository struct {
 	db     *sql.DB
-	logger *slog.Logger
+	logger *logger.Logger
 }
 
-func NewUsers(db *sql.DB, logger *slog.Logger) *UsersRepository {
+func NewUsers(db *sql.DB, logger *logger.Logger) *UsersRepository {
 	return &UsersRepository{
 		db:     db,
 		logger: logger,
@@ -42,7 +44,7 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
 		return nil, err
 	}
 	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING id, created_at",
-		userTable.name,
+		userTable.tableName,
 		userTable.loginColumnName,
 		userTable.passwordColumnName)
 
@@ -80,8 +82,33 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
 }
 
 func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) {
-	return nil, nil
+	ret := &model.User{}
+
+	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+		userTable.idColumnName,
+		userTable.loginColumnName,
+		userTable.passwordColumnName,
+		userTable.createdAtColumnName,
+		userTable.updatedAtColumnName,
+		userTable.tableName,
+		userTable.idColumnName)
+
+	err := r.db.QueryRow(query, id).Scan(&ret.ID, &ret.Login, &ret.Password, &ret.CreatedAt, &ret.UpdatedAt)
+
+	switch err {
+	case nil:
+		break
+	case sql.ErrNoRows:
+		r.logger.Info("user not found", "userID", id)
+		return nil, repository.ErrUserNotFound
+	default:
+		r.logger.Error(err)
+		return nil, err
+	}
+
+	return ret, nil
 }
+
 func (r UsersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	return nil, nil
 }

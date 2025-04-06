@@ -39,6 +39,12 @@ func (l *Logger) Default() *Logger {
 	return l
 }
 
+func (l *Logger) Testing() *Logger {
+	l.logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+
+	return l
+}
+
 func (l Logger) Error(err error) {
 	_, file, line, ok := runtime.Caller(1)
 	if !ok {

@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
 	"github.com/brotigen23/goph-keeper/server/pkg/crypt"
+	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +24,7 @@ func TestCreate(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	var repo repository.Users = NewUsers(db, nil)
+	var repo repository.Users = NewUsers(db, logger.New().Testing())
 	type userCredentials struct {
 		login    string
 		password string
@@ -116,6 +119,108 @@ func TestCreate(t *testing.T) {
 					test.args.userCredentials.password)
 
 				assert.Equal(t, test.want.err, err)
+			}
+		})
+	}
+}
+func TestGetByID(t *testing.T) {
+	time := time.Now()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	var repo repository.Users = NewUsers(db, logger.New().Testing())
+	type args struct {
+		id     int
+		rows   *sqlmock.Rows
+		sqlErr error
+	}
+	type want struct {
+		user *model.User
+		err  error
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Test OK",
+			args: args{
+				id: 1,
+				rows: sqlmock.
+					NewRows([]string{
+						userTable.idColumnName,
+						userTable.loginColumnName,
+						userTable.passwordColumnName,
+						userTable.createdAtColumnName,
+						userTable.updatedAtColumnName}).
+					AddRow(
+						1,
+						"user1",
+						"pass1",
+						time,
+						time,
+					),
+				sqlErr: nil,
+			},
+			want: want{
+				user: &model.User{
+					ID:        1,
+					Login:     "user1",
+					Password:  "pass1",
+					CreatedAt: time,
+					UpdatedAt: time,
+				},
+			},
+		},
+		{
+			name: "Test Not Found",
+			args: args{
+				id:     2,
+				sqlErr: sql.ErrNoRows,
+			},
+			want: want{
+				err: repository.ErrUserNotFound,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = ?",
+				userTable.idColumnName,
+				userTable.loginColumnName,
+				userTable.passwordColumnName,
+				userTable.createdAtColumnName,
+				userTable.updatedAtColumnName,
+				userTable.tableName,
+				userTable.idColumnName)
+
+			switch test.args.sqlErr {
+			case nil:
+				mock.ExpectQuery(query).
+					WithArgs(
+						test.args.id).
+					WillReturnRows(
+						test.args.rows)
+
+				user, err := repo.GetByID(context.Background(), test.args.id)
+				assert.Equal(t, test.want.err, err)
+
+				assert.Equal(t, test.want.user, user)
+			case sql.ErrNoRows:
+				mock.ExpectQuery(query).
+					WithArgs(
+						test.args.id).
+					WillReturnError(
+						test.args.sqlErr)
+
+				user, err := repo.GetByID(context.Background(), test.args.id)
+				assert.Equal(t, test.want.err, err)
+
+				assert.Equal(t, test.want.user, user)
 			}
 		})
 	}
