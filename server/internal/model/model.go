@@ -79,7 +79,7 @@ type Metadata struct {
 	ID        int
 	TableName string
 	RowID     int
-	data      string
+	Data      string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
