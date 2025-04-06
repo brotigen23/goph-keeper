@@ -20,19 +20,19 @@ var userTable = struct {
 	updatedAtColumnName string
 }{"users", "id", "login", "password", "created_at", "updated_at"}
 
-type UsersRepository struct {
+type usersRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewUsers(db *sql.DB, logger *logger.Logger) *UsersRepository {
-	return &UsersRepository{
+func NewUsers(db *sql.DB, logger *logger.Logger) repository.Users {
+	return &usersRepository{
 		db:     db,
 		logger: logger,
 	}
 }
 
-func (r UsersRepository) Create(ctx context.Context, login, password string) (*model.User, error) {
+func (r usersRepository) Create(ctx context.Context, login, password string) (*model.User, error) {
 
 	ret := &model.User{
 		Login:    login,
@@ -69,7 +69,7 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
 	return ret, nil
 }
 
-func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) {
+func (r usersRepository) GetByID(ctx context.Context, id int) (*model.User, error) {
 	ret := &model.User{}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
@@ -97,14 +97,14 @@ func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, erro
 	return ret, nil
 }
 
-func (r UsersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
+func (r usersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	return nil, nil
 }
 
-func (r UsersRepository) Update(ctx context.Context, user model.User) (*model.User, error) {
+func (r usersRepository) Update(ctx context.Context, user model.User) (*model.User, error) {
 	return nil, nil
 }
 
-func (r UsersRepository) DeleteByID(ctx context.Context, id int) (*model.User, error) {
+func (r usersRepository) DeleteByID(ctx context.Context, id int) (*model.User, error) {
 	return nil, nil
 }

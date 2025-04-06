@@ -8,7 +8,6 @@ import (
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
-	"github.com/brotigen23/goph-keeper/server/pkg/pgErrors"
 )
 
 var accountsTable = struct {
@@ -21,12 +20,16 @@ var accountsTable = struct {
 	updatedAtColumnName string
 }{"accounts", "id", "user_id", "login", "password", "created_at", "updated_at"}
 
-type AccountsRepository struct {
+type accountsRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func (r AccountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) {
+func NewAccounts() repository.Accounts {
+	return &accountsRepository{}
+}
+
+func (r accountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) {
 	ret := &model.AccountData{
 		UserID:   userID,
 		Login:    login,
@@ -44,14 +47,11 @@ func (r AccountsRepository) Create(ctx context.Context, userID int, login, passw
 		accountsTable.idColumnName,
 		accountsTable.createdAtColumnName)
 
-	err = tx.QueryRowContext(ctx, query, login, password).Scan(&ret.ID, &ret.CreatedAt)
+	err = tx.QueryRowContext(ctx, query, userID, login, password).Scan(&ret.ID, &ret.CreatedAt)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, rollbackErr
-		}
-		if pgErrors.CheckIfUniqueViolation(err) {
-			return nil, repository.ErrUserExists
 		}
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (r AccountsRepository) Create(ctx context.Context, userID int, login, passw
 	return ret, nil
 }
 
-func (r AccountsRepository) GetByID(ctx context.Context, id int) (*model.AccountData, error) {
+func (r accountsRepository) GetByID(ctx context.Context, id int) (*model.AccountData, error) {
 	ret := &model.AccountData{}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
@@ -95,7 +95,7 @@ func (r AccountsRepository) GetByID(ctx context.Context, id int) (*model.Account
 
 	return ret, nil
 }
-func (r AccountsRepository) GetByUserID(ctx context.Context, userID int) ([]model.AccountData, error) {
+func (r accountsRepository) GetByUserID(ctx context.Context, userID int) ([]model.AccountData, error) {
 
 	ret := []model.AccountData{}
 
@@ -131,10 +131,10 @@ func (r AccountsRepository) GetByUserID(ctx context.Context, userID int) ([]mode
 	return ret, nil
 }
 
-func (r AccountsRepository) Update(context.Context, model.AccountData) (*model.AccountData, error) {
+func (r accountsRepository) Update(context.Context, model.AccountData) (*model.AccountData, error) {
 	return nil, nil
 }
 
-func (r AccountsRepository) DeleteByID(context.Context, int) (*model.AccountData, error) {
+func (r accountsRepository) DeleteByID(context.Context, int) (*model.AccountData, error) {
 	return nil, nil
 }

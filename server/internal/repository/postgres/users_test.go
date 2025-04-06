@@ -23,7 +23,7 @@ func TestCreate(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	var repo repository.Users = NewUsers(db, logger.New().Testing())
+	var repo = NewUsers(db, logger.New().Testing())
 	type userCredentials struct {
 		login    string
 		password string
@@ -129,7 +129,7 @@ func TestGetByID(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	var repo repository.Users = NewUsers(db, logger.New().Testing())
+	var repo = NewUsers(db, logger.New().Testing())
 	type args struct {
 		id     int
 		rows   *sqlmock.Rows

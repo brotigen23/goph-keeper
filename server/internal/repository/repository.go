@@ -30,7 +30,7 @@ type Accounts interface {
 }
 
 type Text interface {
-	Create(ctx context.Context, userID int, data string) (*model.User, error)
+	Create(ctx context.Context, userID int, data string) (*model.TextData, error)
 
 	GetByID(ctx context.Context, id int) (*model.TextData, error)
 	GetByUserID(ctx context.Context, userID int) ([]model.TextData, error)
@@ -56,12 +56,12 @@ type Cards interface {
 		userID int, number, cardholderName string,
 		expireAt time.Time, cvv string) (*model.CardData, error)
 
-	GetByID(ctx context.Context, id int) (*model.TextData, error)
-	GetByUserID(ctx context.Context, userID int) ([]model.TextData, error)
+	GetByID(ctx context.Context, id int) (*model.CardData, error)
+	GetByUserID(ctx context.Context, userID int) ([]model.CardData, error)
 
-	Update(context.Context, model.TextData) (*model.TextData, error)
+	Update(context.Context, model.CardData) (*model.CardData, error)
 
-	DeleteByID(context.Context, int) (*model.TextData, error)
+	DeleteByID(context.Context, int) (*model.CardData, error)
 }
 
 type Metadata interface {
