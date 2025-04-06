@@ -69,9 +69,9 @@
 				
 				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/card_data.go (0.0%)</option>
 				
-				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/metadata.go (0.0%)</option>
+				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/metadata.go (43.6%)</option>
 				
-				<option value="file8">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/text_data.go (47.7%)</option>
+				<option value="file8">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/text_data.go (61.4%)</option>
 				
 				<option value="file9">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/users.go (71.9%)</option>
 				
@@ -771,13 +771,13 @@ type metadataRepository struct {
         logger *logger.Logger
 }
 
-func NewMetadata(db *sql.DB, logger *logger.Logger) repository.Metadata <span class="cov0" title="0">{
+func NewMetadataRepository(db *sql.DB, logger *logger.Logger) repository.Metadata <span class="cov8" title="1">{
         return &amp;metadataRepository{
                 db:     db,
                 logger: logger}
 }</span>
 
-func (r metadataRepository) Create(ctx context.Context, tableName string, rowID int, data string) (*model.Metadata, error) <span class="cov0" title="0">{
+func (r metadataRepository) Create(ctx context.Context, tableName string, rowID int, data string) (*model.Metadata, error) <span class="cov8" title="1">{
 
         ret := &amp;model.Metadata{
                 TableName: tableName,
@@ -788,7 +788,7 @@ func (r metadataRepository) Create(ctx context.Context, tableName string, rowID 
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s) VALUES($1, $2, $3) RETURNING %s, %s",
+        <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s) VALUES($1, $2, $3) RETURNING %s, %s",
                 metadataTable.tableName,
                 metadataTable.tableNameColumnName,
                 metadataTable.rowIDColumnName,
@@ -805,15 +805,15 @@ func (r metadataRepository) Create(ctx context.Context, tableName string, rowID 
                 <span class="cov0" title="0">return nil, err</span>
         }
 
-        <span class="cov0" title="0">err = tx.Commit()
+        <span class="cov8" title="1">err = tx.Commit()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">ret.UpdatedAt = ret.CreatedAt
+        <span class="cov8" title="1">ret.UpdatedAt = ret.CreatedAt
         return ret, nil</span>
 }
 
-func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadata, error) <span class="cov0" title="0">{
+func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadata, error) <span class="cov8" title="1">{
 
         ret := &amp;model.Metadata{ID: id}
 
@@ -833,7 +833,7 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
                         &amp;ret.CreatedAt,
                         &amp;ret.UpdatedAt)
         switch err </span>{
-        case nil:<span class="cov0" title="0">
+        case nil:<span class="cov8" title="1">
                 break</span>
         case sql.ErrNoRows:<span class="cov0" title="0">
                 r.logger.Info("text data not found", "id", id)
@@ -844,7 +844,7 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
                 return nil, err</span>
         }
 
-        <span class="cov0" title="0">return ret, nil</span>
+        <span class="cov8" title="1">return ret, nil</span>
 }
 func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, rowID int) (*model.Metadata, error) <span class="cov0" title="0">{
 
@@ -955,7 +955,7 @@ func (r textRepository) Create(ctx context.Context, userID int, data string) (*m
         return ret, nil</span>
 }
 
-func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, error) <span class="cov0" title="0">{
+func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, error) <span class="cov8" title="1">{
 
         ret := &amp;model.TextData{ID: id}
 
@@ -973,7 +973,7 @@ func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, e
                         &amp;ret.CreatedAt,
                         &amp;ret.UpdatedAt)
         switch err </span>{
-        case nil:<span class="cov0" title="0">
+        case nil:<span class="cov8" title="1">
                 break</span>
         case sql.ErrNoRows:<span class="cov0" title="0">
                 r.logger.Info("text data not found", "id", id)
@@ -983,7 +983,7 @@ func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, e
                 return nil, err</span>
         }
 
-        <span class="cov0" title="0">return ret, nil</span>
+        <span class="cov8" title="1">return ret, nil</span>
 }
 func (r textRepository) GetByUserID(ctx context.Context, userID int) ([]model.TextData, error) <span class="cov8" title="1">{
 

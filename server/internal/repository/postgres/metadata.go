@@ -21,14 +21,14 @@ var metadataTable = struct {
 
 	createdAtColumnName string
 	updatedAtColumnName string
-}{"accounts", "id", "table_name", "row_id", "data", "created_at", "updated_at"}
+}{"metadata", "id", "table_name", "row_id", "data", "created_at", "updated_at"}
 
 type metadataRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewMetadata(db *sql.DB, logger *logger.Logger) repository.Metadata {
+func NewMetadataRepository(db *sql.DB, logger *logger.Logger) repository.Metadata {
 	return &metadataRepository{
 		db:     db,
 		logger: logger}
@@ -105,20 +105,19 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
 }
 func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, rowID int) (*model.Metadata, error) {
 
-	ret := &model.Metadata{RowID: rowID}
+	ret := &model.Metadata{TableName: tableName, RowID: rowID}
 
-	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+	query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1 AND %s = $2",
 		metadataTable.idColumnName,
-		metadataTable.tableNameColumnName,
 		metadataTable.dataColumnName,
 		metadataTable.createdAtColumnName,
 		metadataTable.updatedAtColumnName,
 		metadataTable.tableName,
+		metadataTable.tableNameColumnName,
 		metadataTable.rowIDColumnName)
 
-	err := r.db.QueryRowContext(ctx, query, rowID).
+	err := r.db.QueryRowContext(ctx, query, tableName, rowID).
 		Scan(&ret.ID,
-			&ret.TableName,
 			&ret.Data,
 			&ret.CreatedAt,
 			&ret.UpdatedAt)
@@ -127,7 +126,6 @@ func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, ro
 		break
 	case sql.ErrNoRows:
 		r.logger.Info("metadata not found", "row id", rowID)
-		// TODO: return error
 		return nil, repository.ErrMetadataNotFound
 	default:
 		r.logger.Error(err)
