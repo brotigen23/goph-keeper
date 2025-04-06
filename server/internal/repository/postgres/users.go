@@ -4,11 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
-	"github.com/brotigen23/goph-keeper/server/pkg/crypt"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/brotigen23/goph-keeper/server/pkg/pgErrors"
 )
@@ -36,24 +34,22 @@ func NewUsers(db *sql.DB, logger *logger.Logger) *UsersRepository {
 
 func (r UsersRepository) Create(ctx context.Context, login, password string) (*model.User, error) {
 
-	var createdAt time.Time
-	var id int
-
+	ret := &model.User{
+		Login:    login,
+		Password: password,
+	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING id, created_at",
+	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s",
 		userTable.tableName,
 		userTable.loginColumnName,
-		userTable.passwordColumnName)
+		userTable.passwordColumnName,
+		userTable.idColumnName,
+		userTable.createdAtColumnName)
 
-	passHash, err := crypt.HashPassword(password)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.QueryRowContext(ctx, query, login, passHash).Scan(&id, &createdAt)
+	err = tx.QueryRowContext(ctx, query, login, password).Scan(&ret.ID, &ret.CreatedAt)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
@@ -69,16 +65,8 @@ func (r UsersRepository) Create(ctx context.Context, login, password string) (*m
 	if err != nil {
 		return nil, err
 	}
-
-	savedUser := &model.User{
-		ID:        id,
-		Login:     login,
-		Password:  passHash,
-		CreatedAt: createdAt,
-		UpdatedAt: createdAt,
-	}
-
-	return savedUser, nil
+	ret.UpdatedAt = ret.CreatedAt
+	return ret, nil
 }
 
 func (r UsersRepository) GetByID(ctx context.Context, id int) (*model.User, error) {

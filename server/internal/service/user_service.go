@@ -5,6 +5,7 @@ import (
 
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
+	"github.com/brotigen23/goph-keeper/server/pkg/crypt"
 )
 
 type UserService struct {
@@ -29,9 +30,12 @@ func (s UserService) Create(login, password string) (*model.User, error) {
 		return nil, err
 	}
 	// Hash password
-
+	passHash, err := crypt.HashPassword(password)
+	if err != nil {
+		return nil, err
+	}
 	// Create
-	user, err := s.repo.Create(context.Background(), login, password)
+	user, err := s.repo.Create(context.Background(), login, passHash)
 	if err != nil {
 		return nil, err
 	}

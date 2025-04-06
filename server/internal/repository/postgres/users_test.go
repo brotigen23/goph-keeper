@@ -10,7 +10,6 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
-	"github.com/brotigen23/goph-keeper/server/pkg/crypt"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
@@ -59,8 +58,9 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				user: &model.User{
-					ID:    1,
-					Login: "user1",
+					ID:       1,
+					Login:    "user1",
+					Password: "pass1",
 				},
 			},
 		},
@@ -102,7 +102,7 @@ func TestCreate(t *testing.T) {
 
 				assert.Equal(t, test.want.user.ID, user.ID)
 				assert.Equal(t, test.want.user.Login, user.Login)
-				assert.NoError(t, crypt.CheckPasswordHash(test.args.userCredentials.password, user.Password))
+				assert.Equal(t, test.want.user.Password, user.Password)
 			default:
 				mock.ExpectBegin()
 				mock.ExpectQuery("INSERT INTO users").
@@ -210,7 +210,7 @@ func TestGetByID(t *testing.T) {
 				assert.Equal(t, test.want.err, err)
 
 				assert.Equal(t, test.want.user, user)
-			case sql.ErrNoRows:
+			default:
 				mock.ExpectQuery(query).
 					WithArgs(
 						test.args.id).
