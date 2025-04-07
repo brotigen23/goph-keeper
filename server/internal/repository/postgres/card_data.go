@@ -24,14 +24,14 @@ var cardsTable = struct {
 
 	createdAtColumnName string
 	updatedAtColumnName string
-}{"accounts", "id", "user_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
+}{"cards_data", "id", "user_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
 
 type cardsRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewCards(db *sql.DB, logger *logger.Logger) repository.Cards {
+func NewCardsRepository(db *sql.DB, logger *logger.Logger) repository.Cards {
 	return &cardsRepository{
 		db:     db,
 		logger: logger}
