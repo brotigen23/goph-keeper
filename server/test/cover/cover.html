@@ -67,9 +67,9 @@
 				
 				<option value="file5">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/binary_data.go (0.0%)</option>
 				
-				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/card_data.go (0.0%)</option>
+				<option value="file6">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/card_data.go (61.4%)</option>
 				
-				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/metadata.go (43.6%)</option>
+				<option value="file7">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/metadata.go (59.0%)</option>
 				
 				<option value="file8">github.com/brotigen23/goph-keeper/server/internal/repository/postgres/text_data.go (61.4%)</option>
 				
@@ -598,14 +598,14 @@ var cardsTable = struct {
 
         createdAtColumnName string
         updatedAtColumnName string
-}{"accounts", "id", "user_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
+}{"cards_data", "id", "user_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
 
 type cardsRepository struct {
         db     *sql.DB
         logger *logger.Logger
 }
 
-func NewCards(db *sql.DB, logger *logger.Logger) repository.Cards <span class="cov0" title="0">{
+func NewCardsRepository(db *sql.DB, logger *logger.Logger) repository.Cards <span class="cov8" title="1">{
         return &amp;cardsRepository{
                 db:     db,
                 logger: logger}
@@ -614,7 +614,7 @@ func NewCards(db *sql.DB, logger *logger.Logger) repository.Cards <span class="c
 func (r cardsRepository) Create(
         ctx context.Context,
         userID int, number, cardholderName string,
-        expireAt time.Time, cvv string) (*model.CardData, error) <span class="cov0" title="0">{
+        expireAt time.Time, cvv string) (*model.CardData, error) <span class="cov8" title="1">{
 
         ret := &amp;model.CardData{
                 UserID:         userID,
@@ -627,7 +627,7 @@ func (r cardsRepository) Create(
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s, %s, %s) VALUES($1, $2, $3, $4) RETURNING %s, %s",
+        <span class="cov8" title="1">query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s, %s, %s) VALUES($1, $2, $3, $4) RETURNING %s, %s",
                 cardsTable.tableName,
                 cardsTable.userIDColumnName,
                 cardsTable.numberColumnName,
@@ -646,15 +646,15 @@ func (r cardsRepository) Create(
                 <span class="cov0" title="0">return nil, err</span>
         }
 
-        <span class="cov0" title="0">err = tx.Commit()
+        <span class="cov8" title="1">err = tx.Commit()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">ret.UpdatedAt = ret.CreatedAt
+        <span class="cov8" title="1">ret.UpdatedAt = ret.CreatedAt
         return ret, nil</span>
 }
 
-func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, error) <span class="cov0" title="0">{
+func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, error) <span class="cov8" title="1">{
 
         ret := &amp;model.CardData{ID: id}
 
@@ -678,7 +678,7 @@ func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, 
                         &amp;ret.CreatedAt,
                         &amp;ret.UpdatedAt)
         switch err </span>{
-        case nil:<span class="cov0" title="0">
+        case nil:<span class="cov8" title="1">
                 break</span>
         case sql.ErrNoRows:<span class="cov0" title="0">
                 r.logger.Info("card info not found", "id", id)
@@ -689,9 +689,9 @@ func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, 
                 return nil, err</span>
         }
 
-        <span class="cov0" title="0">return ret, nil</span>
+        <span class="cov8" title="1">return ret, nil</span>
 }
-func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.CardData, error) <span class="cov0" title="0">{
+func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.CardData, error) <span class="cov8" title="1">{
 
         ret := []model.CardData{}
 
@@ -711,7 +711,7 @@ func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.C
                 r.logger.Error(err)
                 return nil, err
         }</span>
-        <span class="cov0" title="0">for rows.Next() </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">for rows.Next() </span><span class="cov8" title="1">{
                 ret = append(ret, model.CardData{UserID: userID})
                 err = rows.Scan(
                         &amp;ret[len(ret)-1].ID,
@@ -728,10 +728,10 @@ func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.C
                 }</span>
         }
 
-        <span class="cov0" title="0">if len(ret) == 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(ret) == 0 </span><span class="cov0" title="0">{
                 return nil, repository.ErrCardsDataNotFound
         }</span>
-        <span class="cov0" title="0">return ret, nil</span>
+        <span class="cov8" title="1">return ret, nil</span>
 }
 
 func (r cardsRepository) Update(context.Context, model.CardData) (*model.CardData, error) <span class="cov0" title="0">{
@@ -764,7 +764,7 @@ var metadataTable = struct {
 
         createdAtColumnName string
         updatedAtColumnName string
-}{"accounts", "id", "table_name", "row_id", "data", "created_at", "updated_at"}
+}{"metadata", "id", "table_name", "row_id", "data", "created_at", "updated_at"}
 
 type metadataRepository struct {
         db     *sql.DB
@@ -846,38 +846,36 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
 
         <span class="cov8" title="1">return ret, nil</span>
 }
-func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, rowID int) (*model.Metadata, error) <span class="cov0" title="0">{
+func (r metadataRepository) GetByRowID(ctx context.Context, tableName string, rowID int) (*model.Metadata, error) <span class="cov8" title="1">{
 
-        ret := &amp;model.Metadata{RowID: rowID}
+        ret := &amp;model.Metadata{TableName: tableName, RowID: rowID}
 
-        query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+        query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1 AND %s = $2",
                 metadataTable.idColumnName,
-                metadataTable.tableNameColumnName,
                 metadataTable.dataColumnName,
                 metadataTable.createdAtColumnName,
                 metadataTable.updatedAtColumnName,
                 metadataTable.tableName,
+                metadataTable.tableNameColumnName,
                 metadataTable.rowIDColumnName)
 
-        err := r.db.QueryRowContext(ctx, query, rowID).
+        err := r.db.QueryRowContext(ctx, query, tableName, rowID).
                 Scan(&amp;ret.ID,
-                        &amp;ret.TableName,
                         &amp;ret.Data,
                         &amp;ret.CreatedAt,
                         &amp;ret.UpdatedAt)
         switch err </span>{
-        case nil:<span class="cov0" title="0">
+        case nil:<span class="cov8" title="1">
                 break</span>
         case sql.ErrNoRows:<span class="cov0" title="0">
                 r.logger.Info("metadata not found", "row id", rowID)
-                // TODO: return error
                 return nil, repository.ErrMetadataNotFound</span>
         default:<span class="cov0" title="0">
                 r.logger.Error(err)
                 return nil, err</span>
         }
 
-        <span class="cov0" title="0">return ret, nil</span>
+        <span class="cov8" title="1">return ret, nil</span>
 }
 
 func (r metadataRepository) Update(context.Context, model.Metadata) (*model.Metadata, error) <span class="cov0" title="0">{

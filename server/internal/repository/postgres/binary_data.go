@@ -27,7 +27,7 @@ type binaryRepository struct {
 	logger *logger.Logger
 }
 
-func NewBinary(db *sql.DB, logger *logger.Logger) repository.Binary {
+func NewBinaryRepository(db *sql.DB, logger *logger.Logger) repository.Binary {
 	return &binaryRepository{
 		db:     db,
 		logger: logger}
@@ -103,12 +103,12 @@ func (r binaryRepository) GetByUserID(ctx context.Context, userID int) ([]model.
 	ret := []model.BinaryData{}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
-		textDataTable.idColumnName,
-		textDataTable.dataColumnName,
-		textDataTable.createdAtColumnName,
-		textDataTable.updatedAtColumnName,
-		textDataTable.tableName,
-		textDataTable.userIDColumnName)
+		binaryTable.idColumnName,
+		binaryTable.dataColumnName,
+		binaryTable.createdAtColumnName,
+		binaryTable.updatedAtColumnName,
+		binaryTable.tableName,
+		binaryTable.userIDColumnName)
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {

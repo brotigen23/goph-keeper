@@ -13,9 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var timeNow = time.Now()
-
 func TestCreateCardData(t *testing.T) {
+	timeNow := time.Now()
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
@@ -104,6 +103,8 @@ func TestCreateCardData(t *testing.T) {
 }
 
 func TestGetCardDataByID(t *testing.T) {
+	timeNow := time.Now()
+
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
@@ -185,6 +186,8 @@ func TestGetCardDataByID(t *testing.T) {
 }
 
 func TestGetCardDataByUserID(t *testing.T) {
+	timeNow := time.Now()
+
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
