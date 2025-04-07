@@ -19,18 +19,18 @@ var textDataTable = struct {
 	updatedAtColumnName string
 }{"text_data", "id", "user_id", "data", "created_at", "updated_at"}
 
-type textRepository struct {
+type textDataRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
 func NewTextDataRepository(db *sql.DB, logger *logger.Logger) repository.Text {
-	return &textRepository{
+	return &textDataRepository{
 		db:     db,
 		logger: logger}
 }
 
-func (r textRepository) Create(ctx context.Context, userID int, data string) (*model.TextData, error) {
+func (r textDataRepository) Create(ctx context.Context, userID int, data string) (*model.TextData, error) {
 
 	ret := &model.TextData{
 		UserID: userID,
@@ -64,7 +64,7 @@ func (r textRepository) Create(ctx context.Context, userID int, data string) (*m
 	return ret, nil
 }
 
-func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, error) {
+func (r textDataRepository) GetByID(ctx context.Context, id int) (*model.TextData, error) {
 
 	ret := &model.TextData{ID: id}
 
@@ -94,7 +94,7 @@ func (r textRepository) GetByID(ctx context.Context, id int) (*model.TextData, e
 
 	return ret, nil
 }
-func (r textRepository) GetByUserID(ctx context.Context, userID int) ([]model.TextData, error) {
+func (r textDataRepository) GetByUserID(ctx context.Context, userID int) ([]model.TextData, error) {
 
 	ret := []model.TextData{}
 
@@ -130,10 +130,10 @@ func (r textRepository) GetByUserID(ctx context.Context, userID int) ([]model.Te
 	return ret, nil
 }
 
-func (r textRepository) Update(context.Context, model.TextData) (*model.TextData, error) {
+func (r textDataRepository) Update(context.Context, model.TextData) (*model.TextData, error) {
 	return nil, nil
 }
 
-func (r textRepository) DeleteByID(context.Context, int) (*model.TextData, error) {
+func (r textDataRepository) DeleteByID(context.Context, int) (*model.TextData, error) {
 	return nil, nil
 }

@@ -23,7 +23,7 @@ func TestCreateUser(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	var repo = NewUsers(db, logger.New().Testing())
+	var repo = NewUsersRepository(db, logger.New().Testing())
 	type userCredentials struct {
 		login    string
 		password string
@@ -130,7 +130,7 @@ func TestGetUserByID(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	var repo = NewUsers(db, logger.New().Testing())
+	var repo = NewUsersRepository(db, logger.New().Testing())
 	type args struct {
 		id     int
 		rows   *sqlmock.Rows
@@ -223,6 +223,85 @@ func TestGetUserByID(t *testing.T) {
 
 				assert.Equal(t, test.want.user, user)
 			}
+		})
+	}
+}
+
+func TestGetUserByLogin(t *testing.T) {
+	time := time.Now()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	var repo = NewUsersRepository(db, logger.New().Testing())
+	type args struct {
+		login  string
+		rows   *sqlmock.Rows
+		sqlErr error
+	}
+	type want struct {
+		user *model.User
+		err  error
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Test OK",
+			args: args{
+				login: "user1",
+				rows: sqlmock.
+					NewRows([]string{
+						userTable.idColumnName,
+						userTable.loginColumnName,
+						userTable.passwordColumnName,
+						userTable.createdAtColumnName,
+						userTable.updatedAtColumnName}).
+					AddRow(
+						1,
+						"user1",
+						"pass1",
+						time,
+						time,
+					),
+				sqlErr: nil,
+			},
+			want: want{
+				user: &model.User{
+					ID:        1,
+					Login:     "user1",
+					Password:  "pass1",
+					CreatedAt: time,
+					UpdatedAt: time,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = ?",
+				userTable.idColumnName,
+				userTable.loginColumnName,
+				userTable.passwordColumnName,
+				userTable.createdAtColumnName,
+				userTable.updatedAtColumnName,
+				userTable.tableName,
+				userTable.loginColumnName)
+
+			mock.ExpectQuery(query).
+				WithArgs(
+					test.args.login).
+				WillReturnRows(
+					test.args.rows)
+
+			user, err := repo.GetByLogin(context.Background(), test.args.login)
+			assert.Equal(t, test.want.err, err)
+
+			assert.Equal(t, test.want.user, user)
 		})
 	}
 }

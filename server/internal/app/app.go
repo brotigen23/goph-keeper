@@ -2,9 +2,6 @@ package app
 
 import (
 	"database/sql"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/brotigen23/goph-keeper/server/internal/config"
 	"github.com/brotigen23/goph-keeper/server/internal/handler"
@@ -37,7 +34,7 @@ func Run() error {
 		logger.Error(err)
 		return err
 	}
-
+	defer db.Close()
 	err = migration.Migrate(db, "file://migration/")
 	if err != nil {
 		logger.Error(err)
@@ -46,7 +43,7 @@ func Run() error {
 
 	// Repos
 	// userRepo
-	userRepo := postgres.NewUsers(nil, nil)
+	userRepo := postgres.NewUsersRepository(db, logger)
 
 	// Servicies
 	userService := service.NewUserService(userRepo)
@@ -59,21 +56,4 @@ func Run() error {
 	server := server.New(logger, handler)
 
 	return server.Run()
-}
-
-var (
-	logPath     = filepath.Join(".", "log")
-	logFileName = logPath + "/" + time.Now().String() + ".log"
-)
-
-func createOrOpenLogFile(path string) (*os.File, error) {
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-	logFile, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		return nil, err
-	}
-	return logFile, nil
 }

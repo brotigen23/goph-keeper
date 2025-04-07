@@ -20,5 +20,9 @@ coverage:
 		echo "coverage.out file not found"; \
 	fi
 
+mockgen:
+	~/go/bin/mockgen -source=./internal/repository/repository.go -destination=./internal/repository/mock/repository.go -package=mock
 
-.PHONY: test coverage
+
+
+.PHONY: test coverage mockgen

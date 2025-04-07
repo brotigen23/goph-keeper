@@ -19,12 +19,8 @@ func Migrate(db *sql.DB, path string) error {
 		return err
 	}
 	err = m.Up()
-	errSource, errDB := m.Close()
-	if errSource != nil {
-		return errSource
+	if err == migrate.ErrNoChange {
+		return nil
 	}
-	if errDB != nil {
-		return errDB
-	}
-	return nil
+	return err
 }

@@ -25,7 +25,7 @@ type usersRepository struct {
 	logger *logger.Logger
 }
 
-func NewUsers(db *sql.DB, logger *logger.Logger) repository.Users {
+func NewUsersRepository(db *sql.DB, logger *logger.Logger) repository.Users {
 	return &usersRepository{
 		db:     db,
 		logger: logger,
@@ -99,7 +99,32 @@ func (r usersRepository) GetByID(ctx context.Context, id int) (*model.User, erro
 }
 
 func (r usersRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
-	return nil, nil
+	ret := &model.User{Login: login}
+
+	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
+		userTable.idColumnName,
+		userTable.loginColumnName,
+		userTable.passwordColumnName,
+		userTable.createdAtColumnName,
+		userTable.updatedAtColumnName,
+		userTable.tableName,
+		userTable.loginColumnName)
+
+	err := r.db.QueryRowContext(ctx, query, login).
+		Scan(&ret.ID, &ret.Login, &ret.Password, &ret.CreatedAt, &ret.UpdatedAt)
+
+	switch err {
+	case nil:
+		break
+	case sql.ErrNoRows:
+		r.logger.Info("user not found", "user login", login)
+		return nil, repository.ErrUserNotFound
+	default:
+		r.logger.Error(err)
+		return nil, err
+	}
+
+	return ret, nil
 }
 
 func (r usersRepository) Update(ctx context.Context, user model.User) (*model.User, error) {

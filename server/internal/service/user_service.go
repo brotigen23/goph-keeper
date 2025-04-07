@@ -18,17 +18,7 @@ func NewUserService(repo repository.Users) *UserService {
 	}
 }
 
-func (s UserService) Create(login, password string) (*model.User, error) {
-	// Check if user already exists
-	existUser, err := s.GetUserByLogin(login)
-	switch err {
-	case nil:
-		return existUser, ErrUserExists
-	case repository.ErrUserNotFound:
-		break
-	default:
-		return nil, err
-	}
+func (s UserService) Create(ctx context.Context, login, password string) (*model.User, error) {
 	// Hash password
 	passHash, err := crypt.HashPassword(password)
 	if err != nil {
@@ -42,7 +32,15 @@ func (s UserService) Create(login, password string) (*model.User, error) {
 	return user, nil
 }
 
-func (s UserService) GetUserByLogin(login string) (*model.User, error) {
+func (s UserService) GetUserByLogin(ctx context.Context, login string) (*model.User, error) {
+	user, err := s.repo.GetByLogin(context.Background(), login)
 
-	return nil, nil
+	switch err {
+	case nil:
+		return user, nil
+	case repository.ErrUserNotFound:
+		return nil, ErrUserNotFound
+	default:
+		return nil, err
+	}
 }
