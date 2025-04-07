@@ -25,7 +25,7 @@ type accountsRepository struct {
 	logger *logger.Logger
 }
 
-func NewAccounts(db *sql.DB, logger *logger.Logger) repository.Accounts {
+func NewAccountsRepository(db *sql.DB, logger *logger.Logger) repository.Accounts {
 	return &accountsRepository{
 		db:     db,
 		logger: logger}
@@ -67,7 +67,7 @@ func (r accountsRepository) Create(ctx context.Context, userID int, login, passw
 }
 
 func (r accountsRepository) GetByID(ctx context.Context, id int) (*model.AccountData, error) {
-	ret := &model.AccountData{}
+	ret := &model.AccountData{ID: id}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
 		accountsTable.userIDColumnName,
