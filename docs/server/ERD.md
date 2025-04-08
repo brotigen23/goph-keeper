@@ -1,3 +1,4 @@
+
 ```mermaid
 ---
 title: goph-keeper
@@ -5,34 +6,64 @@ title: goph-keeper
 erDiagram
     users{
         int id
+
         string login
         string password
+
+        time created_at
+        time updated_at 
     }
 
     accounts{
         int id
-        string login
-        string password
+        int user_id
+
+        strin login 
+        strin password 
+
+        time created_at
+        time updated_at
         }
+
     text_data{
         int id
-        string login
-        string password
+        int user_id
+
+        string data
+
+        time created_at
+        time updated_at
+
         }
+
     binary_data{
         int id
-        string login
-        string password
+        int user_id
+
+        bytea data
+
+        time created_at
+        time updated_at
+
     }
     cards_data{
         int id
-        string login
-        string password
+        int user_id
+
+        string number
+        string cardholder_name
+        date expire
+        string cvv 
+
+        time created_at
+        time updated_at
         }
+
     metadata{
-        int id
-        string login
-        string password
+        string table_name
+        int row_id 
+
+        string data 
         }
 
     accounts }o--o{ metadata : a

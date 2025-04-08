@@ -1,11 +1,8 @@
 # goph-keeper
 
-[ТЗ](res/specifications.md)
+[Техническое задание](docs/specifications.md)
 
 
-## .env
-Создайте файл .env и вставьте в него следующие переменные среды
-
-```bash
-JWTSecretKey="<Secret Key>"
-```
+## Сервер
+- [Диаграмма классов](docs/server/Class%20Diagram.md)
+- [ER диаграмма](docs/server/ERD.md)
