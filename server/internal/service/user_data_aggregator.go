@@ -57,3 +57,7 @@ func (a UserDataAggregator) ValidateUserLogin(ctx context.Context, login, passwo
 func (a UserDataAggregator) GetUserAccountsData() {
 
 }
+
+func (a UserDataAggregator) CreateNewTextData(ctx context.Context, data string) (*model.TextData, error) {
+	return nil, nil
+}

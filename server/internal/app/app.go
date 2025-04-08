@@ -58,10 +58,10 @@ func Run() error {
 		metadataService,
 	)
 	//Handler
+	middleware := middleware.New(logger, config.JWT.AccessKey, config.JWT.RefreshKey)
 	handler := handler.New(config, serviceAggregator)
 
 	// Server
-	middleware := middleware.New(logger, config.JWT.AccessKey, config.JWT.RefreshKey)
 	server := server.New(handler, middleware, logger)
 
 	return server.Run()

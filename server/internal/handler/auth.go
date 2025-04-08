@@ -19,7 +19,7 @@ func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user := &dto.UserDTO{}
+	user := &dto.User{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -55,7 +55,7 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user := &dto.UserDTO{}
+	user := &dto.User{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

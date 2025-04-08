@@ -1,9 +1,12 @@
 package dto
 
-type UserDTO struct {
+type User struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-type AccountsDTO struct {
+type Accounts struct {
+}
+
+type TextData struct {
 }
