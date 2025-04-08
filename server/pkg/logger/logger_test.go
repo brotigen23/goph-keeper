@@ -6,7 +6,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	logger := New().Default()
-	err := fmt.Errorf("AAAAAAAAa")
+	logger := New().Testing()
+	err := fmt.Errorf("Error")
 	logger.Error(err)
 }

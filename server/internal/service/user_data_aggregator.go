@@ -4,16 +4,33 @@ import (
 	"context"
 
 	"github.com/brotigen23/goph-keeper/server/internal/model"
-	"github.com/brotigen23/goph-keeper/server/internal/repository"
 )
 
 type UserDataAggregator struct {
-	// Servicies
-	userService *UserService
+	userService       *UserService
+	accountsService   *AccountsService
+	textDataService   *TextDataService
+	binaryDataService *BinaryDataService
+	cardsService      *CardsService
+	metadataService   *MetadataService
 }
 
-func NewAggregator() *UserDataAggregator {
-	return &UserDataAggregator{}
+func NewAggregator(
+	u *UserService,
+	a *AccountsService,
+	t *TextDataService,
+	b *BinaryDataService,
+	c *CardsService,
+	m *MetadataService,
+) *UserDataAggregator {
+	return &UserDataAggregator{
+		userService:       u,
+		accountsService:   a,
+		textDataService:   t,
+		binaryDataService: b,
+		cardsService:      c,
+		metadataService:   m,
+	}
 }
 
 func (a UserDataAggregator) CreateNewUser(ctx context.Context, login, password string) (*model.User, error) {
@@ -21,7 +38,7 @@ func (a UserDataAggregator) CreateNewUser(ctx context.Context, login, password s
 	switch err {
 	case nil:
 		return user, ErrUserExists
-	case repository.ErrUserNotFound:
+	case ErrUserNotFound:
 		break
 	default:
 		return nil, err
@@ -31,6 +48,10 @@ func (a UserDataAggregator) CreateNewUser(ctx context.Context, login, password s
 		return nil, err
 	}
 	return user, nil
+}
+
+func (a UserDataAggregator) ValidateUserLogin(ctx context.Context, login, password string) (*model.User, error) {
+	return nil, nil
 }
 
 func (a UserDataAggregator) GetUserAccountsData() {

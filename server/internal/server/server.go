@@ -9,24 +9,26 @@ import (
 
 	"github.com/brotigen23/goph-keeper/server/internal/handler"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
+	"github.com/brotigen23/goph-keeper/server/pkg/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 type Server struct {
-	handler *handler.Handler
-	logger  *logger.Logger
-
-	// Service
 	server *http.Server
-	// middleware
+
+	handler    *handler.Handler
+	middleware *middleware.Middleware
+
+	logger *logger.Logger
 }
 
-func New(logger *logger.Logger, handler *handler.Handler) *Server {
+func New(handler *handler.Handler, middleware *middleware.Middleware, logger *logger.Logger) *Server {
 	return &Server{
 		handler: handler,
 
 		logger: logger,
+
+		middleware: middleware,
 	}
 }
 
@@ -35,9 +37,24 @@ func (s Server) Run() error {
 	defer stop()
 
 	router := chi.NewRouter()
-	router.Use(middleware.Logger)
+	router.Use(s.middleware.Log)
 
 	router.Get("/ping", s.handler.Ping)
+
+	// Wihtout auth
+	router.Group(func(r chi.Router) {
+		r.Post("/register", s.handler.Register)
+		r.Post("/login", s.handler.Login)
+	})
+
+	// With auth
+	router.Route("/user", func(r chi.Router) {
+		r.Use(s.middleware.Auth)
+		r.Get("/accounts", s.handler.AccountsDataGet)
+		r.Get("/text", nil)
+		r.Get("/binary", nil)
+		r.Get("/cards", nil)
+	})
 
 	s.server = &http.Server{
 		Addr:    ":8080",

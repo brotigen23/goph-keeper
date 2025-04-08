@@ -2,9 +2,9 @@ package service
 
 import "github.com/brotigen23/goph-keeper/server/internal/repository"
 
-type AccountsService struct {
+type MetadataService struct {
 }
 
-func NewAccountsService(repo repository.Accounts) *AccountsService {
+func NewMetadataService(repo repository.Metadata) *MetadataService {
 	return nil
 }

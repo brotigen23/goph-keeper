@@ -66,6 +66,7 @@ func (r usersRepository) Create(ctx context.Context, login, password string) (*m
 		return nil, err
 	}
 	ret.UpdatedAt = ret.CreatedAt
+	r.logger.Info("user registered", "login", login)
 	return ret, nil
 }
 
@@ -88,7 +89,7 @@ func (r usersRepository) GetByID(ctx context.Context, id int) (*model.User, erro
 	case nil:
 		break
 	case sql.ErrNoRows:
-		r.logger.Info("user not found", "userID", id)
+		r.logger.Info("user not found", "id", id)
 		return nil, repository.ErrUserNotFound
 	default:
 		r.logger.Error(err)

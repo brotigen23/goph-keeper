@@ -3,21 +3,23 @@ package handler
 import (
 	"net/http"
 
+	"github.com/brotigen23/goph-keeper/server/internal/config"
 	"github.com/brotigen23/goph-keeper/server/internal/service"
 )
 
 type Handler struct {
-	userService *service.UserService
+	service *service.UserDataAggregator
+
+	config *config.Config
 }
 
-func New() *Handler {
-	return &Handler{}
-}
-
-func (h *Handler) SetUserService(service *service.UserService) {
-	h.userService = service
+func New(c *config.Config, a *service.UserDataAggregator) *Handler {
+	return &Handler{
+		config:  c,
+		service: a,
+	}
 }
 
 func (h Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "server response", http.StatusGone)
+	w.WriteHeader(http.StatusOK)
 }

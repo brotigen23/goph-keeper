@@ -6,3 +6,6 @@ database:
   password: "1234"
   dbname: "mydb"
 
+JWT:
+  access_key: "secret"
+  refresh_key: "secret2"
