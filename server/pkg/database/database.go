@@ -26,6 +26,14 @@ func (d *Database) Migrate(path string) error {
 	return nil
 }
 
+func (d *Database) DiMigrate(path string) error {
+	err := migration.Migrate(d.DB, path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d Database) Close() {
 	d.DB.Close()
 }

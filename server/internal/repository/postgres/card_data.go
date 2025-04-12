@@ -4,18 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 )
 
-var cardsTable = struct {
-	tableName string
+const cardsTableName = "cards_data"
 
+var cardsTable = struct {
 	idColumnName     string
 	userIDColumnName string
+	metadataID       string
 
 	numberColumnName         string
 	cardholderNameColumnName string
@@ -24,47 +24,48 @@ var cardsTable = struct {
 
 	createdAtColumnName string
 	updatedAtColumnName string
-}{"cards_data", "id", "user_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
+}{"id", "user_id", "metadata_id", "number", "cardholder_name", "expire", "cvv", "created_at", "updated_at"}
 
 type cardsRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewCardsRepository(db *sql.DB, logger *logger.Logger) repository.Cards {
+func NewCardsRepository(db *sql.DB, logger *logger.Logger) repository.Data[model.CardData] {
 	return &cardsRepository{
 		db:     db,
 		logger: logger}
 }
 
-func (r cardsRepository) Create(
-	ctx context.Context,
-	userID int, number, cardholderName string,
-	expireAt time.Time, cvv string) (*model.CardData, error) {
+func (r cardsRepository) Create(ctx context.Context, data model.CardData) (*model.CardData, error) {
 
 	ret := &model.CardData{
-		UserID:         userID,
-		Number:         number,
-		CardholderName: cardholderName,
-		Expire:         expireAt,
-		CVV:            cvv,
+		UserID:         data.UserID,
+		Number:         data.Number,
+		CardholderName: data.CardholderName,
+		Expire:         data.Expire,
+		CVV:            data.CVV,
 	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s, %s, %s) VALUES($1, $2, $3, $4) RETURNING %s, %s",
-		cardsTable.tableName,
+	query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s, %s, %s) VALUES($1, $2, $3, $4, $5) RETURNING %s, %s, %s",
+		cardsTableName,
 		cardsTable.userIDColumnName,
 		cardsTable.numberColumnName,
 		cardsTable.cardholderNameColumnName,
 		cardsTable.expireColumnName,
 		cardsTable.cvvColumnName,
 		cardsTable.idColumnName,
+		cardsTable.metadataID,
 		cardsTable.createdAtColumnName)
 
-	err = tx.QueryRowContext(ctx, query, userID, number, cardholderName, expireAt, cvv).Scan(&ret.ID, &ret.CreatedAt)
+	err = tx.QueryRowContext(ctx, query,
+		data.UserID, data.Number, data.CardholderName, data.Expire, data.CVV).
+		Scan(&ret.ID, &ret.MetadataID, &ret.CreatedAt)
 	if err != nil {
+		fmt.Println(err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, rollbackErr
@@ -92,7 +93,7 @@ func (r cardsRepository) GetByID(ctx context.Context, id int) (*model.CardData, 
 		cardsTable.cvvColumnName,
 		cardsTable.createdAtColumnName,
 		cardsTable.updatedAtColumnName,
-		cardsTable.tableName,
+		cardsTableName,
 		cardsTable.idColumnName)
 
 	err := r.db.QueryRowContext(ctx, query, id).
@@ -129,7 +130,7 @@ func (r cardsRepository) GetByUserID(ctx context.Context, userID int) ([]model.C
 		cardsTable.cvvColumnName,
 		cardsTable.createdAtColumnName,
 		cardsTable.updatedAtColumnName,
-		cardsTable.tableName,
+		cardsTableName,
 		cardsTable.userIDColumnName)
 
 	rows, err := r.db.QueryContext(ctx, query, userID)

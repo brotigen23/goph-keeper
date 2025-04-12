@@ -10,47 +10,55 @@ import (
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 )
 
+const accountsTableName = "accounts_data"
+
 var accountsTable = struct {
-	tableName           string
-	idColumnName        string
-	userIDColumnName    string
-	loginColumnName     string
-	passwordColumnName  string
-	createdAtColumnName string
-	updatedAtColumnName string
-}{"accounts", "id", "user_id", "login", "password", "created_at", "updated_at"}
+	id         string
+	userID     string
+	metadataID string
+	login      string
+	password   string
+	createdAt  string
+	updatedAt  string
+}{"id", "user_id", "metadata_id", "login", "password", "created_at", "updated_at"}
 
 type accountsRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewAccountsRepository(db *sql.DB, logger *logger.Logger) repository.Accounts {
+func NewAccountsRepository(db *sql.DB, logger *logger.Logger) repository.Data[model.AccountData] {
 	return &accountsRepository{
 		db:     db,
 		logger: logger}
 }
 
-func (r accountsRepository) Create(ctx context.Context, userID int, login, password string) (*model.AccountData, error) {
+func (r accountsRepository) Create(ctx context.Context, data model.AccountData) (*model.AccountData, error) {
 	ret := &model.AccountData{
-		UserID:   userID,
-		Login:    login,
-		Password: password,
+		UserID:   data.UserID,
+		Login:    data.Login,
+		Password: data.Password,
 	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("INSERT INTO %s(%s, %s, %s) VALUES($1, $2) RETURNING %s, %s",
-		accountsTable.tableName,
-		accountsTable.userIDColumnName,
-		accountsTable.loginColumnName,
-		accountsTable.passwordColumnName,
-		accountsTable.idColumnName,
-		accountsTable.createdAtColumnName)
+	query := fmt.Sprintf(
+		`INSERT INTO %s(
+			%s, %s, %s
+		) 
+		VALUES($1, $2, $3) 
+		RETURNING %s, %s, %s`,
+		accountsTableName,
+		accountsTable.userID, accountsTable.login,
+		accountsTable.password, accountsTable.id,
+		accountsTable.metadataID, accountsTable.createdAt)
 
-	err = tx.QueryRowContext(ctx, query, userID, login, password).Scan(&ret.ID, &ret.CreatedAt)
+	err = tx.QueryRowContext(ctx, query, data.UserID, data.Login, data.Password).
+		Scan(&ret.ID, &ret.MetadataID, &ret.CreatedAt)
+
 	if err != nil {
+		r.logger.Error(err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, rollbackErr
@@ -70,13 +78,13 @@ func (r accountsRepository) GetByID(ctx context.Context, id int) (*model.Account
 	ret := &model.AccountData{ID: id}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
-		accountsTable.userIDColumnName,
-		accountsTable.loginColumnName,
-		accountsTable.passwordColumnName,
-		accountsTable.createdAtColumnName,
-		accountsTable.updatedAtColumnName,
-		accountsTable.tableName,
-		accountsTable.idColumnName)
+		accountsTable.userID,
+		accountsTable.login,
+		accountsTable.password,
+		accountsTable.createdAt,
+		accountsTable.updatedAt,
+		accountsTableName,
+		accountsTable.id)
 
 	err := r.db.QueryRow(query, id).
 		Scan(&ret.UserID,
@@ -102,13 +110,13 @@ func (r accountsRepository) GetByUserID(ctx context.Context, userID int) ([]mode
 	ret := []model.AccountData{}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = $1",
-		accountsTable.idColumnName,
-		accountsTable.loginColumnName,
-		accountsTable.passwordColumnName,
-		accountsTable.createdAtColumnName,
-		accountsTable.updatedAtColumnName,
-		accountsTable.tableName,
-		accountsTable.userIDColumnName)
+		accountsTable.id,
+		accountsTable.login,
+		accountsTable.password,
+		accountsTable.createdAt,
+		accountsTable.updatedAt,
+		accountsTableName,
+		accountsTable.userID)
 
 	rows, err := r.db.Query(query, userID)
 	if err != nil {

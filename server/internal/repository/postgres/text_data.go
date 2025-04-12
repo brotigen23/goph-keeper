@@ -10,45 +10,48 @@ import (
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 )
 
+const textTableName = "text_data"
+
 var textDataTable = struct {
-	tableName           string
-	idColumnName        string
-	userIDColumnName    string
-	dataColumnName      string
-	createdAtColumnName string
-	updatedAtColumnName string
-}{"text_data", "id", "user_id", "data", "created_at", "updated_at"}
+	id         string
+	userID     string
+	metadataID string
+	data       string
+	createdAt  string
+	updatedAt  string
+}{"id", "user_id", "metadata_id", "data", "created_at", "updated_at"}
 
 type textDataRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewTextDataRepository(db *sql.DB, logger *logger.Logger) repository.Text {
+func NewTextDataRepository(db *sql.DB, logger *logger.Logger) repository.Data[model.TextData] {
 	return &textDataRepository{
 		db:     db,
 		logger: logger}
 }
 
-func (r textDataRepository) Create(ctx context.Context, userID int, data string) (*model.TextData, error) {
+func (r textDataRepository) Create(ctx context.Context, data model.TextData) (*model.TextData, error) {
 
 	ret := &model.TextData{
-		UserID: userID,
-		Data:   data,
+		UserID: data.UserID,
+		Data:   data.Data,
 	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s",
-		textDataTable.tableName,
-		textDataTable.userIDColumnName,
-		textDataTable.dataColumnName,
-		textDataTable.idColumnName,
-		textDataTable.createdAtColumnName)
-
-	err = tx.QueryRowContext(ctx, query, userID, data).Scan(&ret.ID, &ret.CreatedAt)
+	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s, %s",
+		textTableName,
+		textDataTable.userID,
+		textDataTable.data,
+		textDataTable.id,
+		textDataTable.metadataID,
+		textDataTable.createdAt)
+	err = tx.QueryRowContext(ctx, query, data.UserID, data.Data).Scan(&ret.ID, &ret.MetadataID, &ret.CreatedAt)
 	if err != nil {
+		r.logger.Error(err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, rollbackErr
@@ -69,12 +72,12 @@ func (r textDataRepository) GetByID(ctx context.Context, id int) (*model.TextDat
 	ret := &model.TextData{ID: id}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
-		textDataTable.userIDColumnName,
-		textDataTable.dataColumnName,
-		textDataTable.createdAtColumnName,
-		textDataTable.updatedAtColumnName,
-		textDataTable.tableName,
-		textDataTable.idColumnName)
+		textDataTable.userID,
+		textDataTable.data,
+		textDataTable.createdAt,
+		textDataTable.updatedAt,
+		textTableName,
+		textDataTable.id)
 
 	err := r.db.QueryRowContext(ctx, query, id).
 		Scan(&ret.UserID,
@@ -99,12 +102,12 @@ func (r textDataRepository) GetByUserID(ctx context.Context, userID int) ([]mode
 	ret := []model.TextData{}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
-		textDataTable.idColumnName,
-		textDataTable.dataColumnName,
-		textDataTable.createdAtColumnName,
-		textDataTable.updatedAtColumnName,
-		textDataTable.tableName,
-		textDataTable.userIDColumnName)
+		textDataTable.id,
+		textDataTable.data,
+		textDataTable.createdAt,
+		textDataTable.updatedAt,
+		textTableName,
+		textDataTable.userID)
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {

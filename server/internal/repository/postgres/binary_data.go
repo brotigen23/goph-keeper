@@ -10,47 +10,49 @@ import (
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 )
 
+const binaryTableName = "binary_data"
+
 var binaryTable = struct {
-	tableName string
+	id         string
+	userID     string
+	metadataID string
 
-	idColumnName     string
-	userIDColumnName string
+	data string
 
-	dataColumnName string
-
-	createdAtColumnName string
-	updatedAtColumnName string
-}{"binary_data", "id", "user_id", "data", "created_at", "updated_at"}
+	createdAt string
+	updatedAt string
+}{"id", "user_id", "metadata_id", "data", "created_at", "updated_at"}
 
 type binaryRepository struct {
 	db     *sql.DB
 	logger *logger.Logger
 }
 
-func NewBinaryRepository(db *sql.DB, logger *logger.Logger) repository.Binary {
+func NewBinaryRepository(db *sql.DB, logger *logger.Logger) repository.Data[model.BinaryData] {
 	return &binaryRepository{
 		db:     db,
 		logger: logger}
 }
 
-func (r binaryRepository) Create(ctx context.Context, userID int, data []byte) (*model.BinaryData, error) {
+func (r binaryRepository) Create(ctx context.Context, data model.BinaryData) (*model.BinaryData, error) {
 
 	ret := &model.BinaryData{
-		UserID: userID,
-		Data:   data,
+		UserID: data.UserID,
+		Data:   data.Data,
 	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s",
-		binaryTable.tableName,
-		binaryTable.userIDColumnName,
-		binaryTable.dataColumnName,
-		binaryTable.idColumnName,
-		binaryTable.createdAtColumnName)
-
-	err = tx.QueryRowContext(ctx, query, userID, data).Scan(&ret.ID, &ret.CreatedAt)
+	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES($1, $2) RETURNING %s, %s, %s",
+		binaryTableName,
+		binaryTable.userID,
+		binaryTable.data,
+		binaryTable.id,
+		binaryTable.metadataID,
+		binaryTable.createdAt)
+	fmt.Println(query)
+	err = tx.QueryRowContext(ctx, query, data.UserID, data.Data).Scan(&ret.ID, &ret.MetadataID, &ret.CreatedAt)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
@@ -72,12 +74,12 @@ func (r binaryRepository) GetByID(ctx context.Context, id int) (*model.BinaryDat
 	ret := &model.BinaryData{ID: id}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
-		binaryTable.userIDColumnName,
-		binaryTable.dataColumnName,
-		binaryTable.createdAtColumnName,
-		binaryTable.updatedAtColumnName,
-		binaryTable.tableName,
-		binaryTable.idColumnName)
+		binaryTable.userID,
+		binaryTable.data,
+		binaryTable.createdAt,
+		binaryTable.updatedAt,
+		binaryTableName,
+		binaryTable.id)
 
 	err := r.db.QueryRowContext(ctx, query, id).
 		Scan(&ret.UserID,
@@ -103,12 +105,12 @@ func (r binaryRepository) GetByUserID(ctx context.Context, userID int) ([]model.
 	ret := []model.BinaryData{}
 
 	query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = $1",
-		binaryTable.idColumnName,
-		binaryTable.dataColumnName,
-		binaryTable.createdAtColumnName,
-		binaryTable.updatedAtColumnName,
-		binaryTable.tableName,
-		binaryTable.userIDColumnName)
+		binaryTable.id,
+		binaryTable.data,
+		binaryTable.createdAt,
+		binaryTable.updatedAt,
+		binaryTableName,
+		binaryTable.userID)
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {

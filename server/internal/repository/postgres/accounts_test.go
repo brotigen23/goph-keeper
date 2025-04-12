@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -13,6 +14,44 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSome(t *testing.T) {
+	query := fmt.Sprintf("INSERT INTO %s", accountsTableName)
+
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	var repo = NewAccountsRepository(db, logger.New().Testing())
+
+	tests := []testArgs[model.AccountData]{
+		{
+			name: "Test OK",
+			mocks: mocks{
+				args: []driver.Value{1, "user1", "pass1"},
+				rows: sqlmock.
+					NewRows([]string{accountsTable.id, accountsTable.metadataID, accountsTable.createdAt}).
+					AddRow(1, 1, timeNow),
+			},
+			args: args[model.AccountData]{
+				data: model.AccountData{UserID: 1, Login: "user1", Password: "pass1"},
+			},
+			want: want[model.AccountData]{
+				data: model.AccountData{
+					ID:         1,
+					UserID:     1,
+					MetadataID: 1,
+					Login:      "user1",
+					Password:   "pass1",
+					CreatedAt:  timeNow,
+					UpdatedAt:  timeNow,
+				},
+				err: nil,
+			},
+		},
+	}
+	testPostgresCreate(t, repo, tests, query, mock)
+}
+
 func TestCreateAccountsData(t *testing.T) {
 	timeNow := time.Now()
 	db, mock, err := sqlmock.New()
@@ -21,13 +60,8 @@ func TestCreateAccountsData(t *testing.T) {
 
 	var repo = NewAccountsRepository(db, logger.New().Testing())
 
-	type accountData struct {
-		login    string
-		password string
-	}
 	type args struct {
-		userID      int
-		accountData accountData
+		accountData model.AccountData
 		rows        *sqlmock.Rows
 		sqlErr      error
 	}
@@ -44,10 +78,9 @@ func TestCreateAccountsData(t *testing.T) {
 		{
 			name: "Test OK",
 			args: args{
-				userID:      1,
-				accountData: accountData{login: "user1", password: "pass1"},
+				accountData: model.AccountData{UserID: 1, Login: "user1", Password: "pass1"},
 				rows: sqlmock.
-					NewRows([]string{accountsTable.idColumnName, accountsTable.createdAtColumnName}).
+					NewRows([]string{accountsTable.id, accountsTable.createdAt}).
 					AddRow(1, timeNow),
 				sqlErr: nil,
 			},
@@ -67,11 +100,11 @@ func TestCreateAccountsData(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			mock.ExpectBegin()
-			mock.ExpectQuery("INSERT INTO "+accountsTable.tableName).
+			mock.ExpectQuery("INSERT INTO "+accountsTableName).
 				WithArgs(
-					test.args.userID,
-					test.args.accountData.login,
-					test.args.accountData.password).
+					test.args.accountData.UserID,
+					test.args.accountData.Login,
+					test.args.accountData.Password).
 				WillReturnRows(
 					test.args.rows)
 
@@ -79,9 +112,8 @@ func TestCreateAccountsData(t *testing.T) {
 
 			accountData, err := repo.Create(
 				context.Background(),
-				test.args.userID,
-				test.args.accountData.login,
-				test.args.accountData.password)
+				test.args.accountData,
+			)
 			assert.Equal(t, test.want.err, err)
 
 			assert.Equal(t, test.want.accountData, accountData)
@@ -117,11 +149,11 @@ func TestGetAccountDataByID(t *testing.T) {
 				id: 1,
 				rows: sqlmock.
 					NewRows([]string{
-						accountsTable.userIDColumnName,
-						accountsTable.loginColumnName,
-						accountsTable.passwordColumnName,
-						accountsTable.createdAtColumnName,
-						accountsTable.updatedAtColumnName,
+						accountsTable.userID,
+						accountsTable.login,
+						accountsTable.password,
+						accountsTable.createdAt,
+						accountsTable.updatedAt,
 					}).
 					AddRow(1, "user1", "pass1", timeNow, timeNow),
 				sqlErr: nil,
@@ -142,13 +174,13 @@ func TestGetAccountDataByID(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = \\$1",
-				accountsTable.userIDColumnName,
-				accountsTable.loginColumnName,
-				accountsTable.passwordColumnName,
-				accountsTable.createdAtColumnName,
-				accountsTable.updatedAtColumnName,
-				accountsTable.tableName,
-				accountsTable.idColumnName)
+				accountsTable.userID,
+				accountsTable.login,
+				accountsTable.password,
+				accountsTable.createdAt,
+				accountsTable.updatedAt,
+				accountsTableName,
+				accountsTable.id)
 
 			mock.ExpectQuery(query).
 				WithArgs(
@@ -192,11 +224,11 @@ func TestGetAccountsDataByUserID(t *testing.T) {
 				userID: 1,
 				rows: sqlmock.
 					NewRows([]string{
-						accountsTable.idColumnName,
-						accountsTable.loginColumnName,
-						accountsTable.passwordColumnName,
-						accountsTable.createdAtColumnName,
-						accountsTable.updatedAtColumnName,
+						accountsTable.id,
+						accountsTable.login,
+						accountsTable.password,
+						accountsTable.createdAt,
+						accountsTable.updatedAt,
 					}).
 					AddRow(1, "user1", "pass1", timeNow, timeNow).
 					AddRow(2, "user2", "pass2", timeNow, timeNow),
@@ -228,13 +260,13 @@ func TestGetAccountsDataByUserID(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s FROM %s WHERE %s = \\$1",
-				accountsTable.idColumnName,
-				accountsTable.loginColumnName,
-				accountsTable.passwordColumnName,
-				accountsTable.createdAtColumnName,
-				accountsTable.updatedAtColumnName,
-				accountsTable.tableName,
-				accountsTable.userIDColumnName)
+				accountsTable.id,
+				accountsTable.login,
+				accountsTable.password,
+				accountsTable.createdAt,
+				accountsTable.updatedAt,
+				accountsTableName,
+				accountsTable.userID)
 
 			mock.ExpectQuery(query).
 				WithArgs(

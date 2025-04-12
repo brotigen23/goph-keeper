@@ -7,4 +7,5 @@ var (
 	ErrUserNotFound      = errors.New("User not found")
 
 	ErrRequestBodyUnableToRead = errors.New("Unable to read request body")
+	ErrIncorrectUserID         = errors.New("Incorrect user id")
 )

@@ -62,7 +62,7 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gotUser, err := h.service.ValidateUserLogin(context.Background(), user.Login, user.Password)
+	gotUser, err := h.service.ValidateUserSingIn(context.Background(), user.Login, user.Password)
 	switch err {
 	case nil:
 		break

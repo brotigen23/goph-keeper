@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -13,72 +14,41 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateTextData(t *testing.T) {
-	time := time.Now()
+func TestBinarysCreate(t *testing.T) {
+	query := fmt.Sprintf("INSERT INTO %s", textTableName)
+
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
 
 	var repo = NewTextDataRepository(db, logger.New().Testing())
-	type args struct {
-		userID int
-		data   string
-		rows   *sqlmock.Rows
-		sqlErr error
-	}
-	type want struct {
-		textData *model.TextData
-		err      error
-	}
 
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
+	tests := []testArgs[model.TextData]{
 		{
 			name: "Test OK",
-			args: args{
-				userID: 1,
-				data:   "some data",
+			mocks: mocks{
+				args: []driver.Value{1, "some data"},
 				rows: sqlmock.
-					NewRows([]string{textDataTable.idColumnName, textDataTable.createdAtColumnName}).
-					AddRow(1, time),
-				sqlErr: nil,
+					NewRows([]string{textDataTable.id, textDataTable.metadataID, textDataTable.createdAt}).
+					AddRow(1, 1, timeNow),
 			},
-			want: want{
-				textData: &model.TextData{
-					ID:     1,
-					UserID: 1,
-					Data:   "some data",
+			args: args[model.TextData]{
+				data: model.TextData{UserID: 1, Data: "some data"},
+			},
+			want: want[model.TextData]{
+				data: model.TextData{
+					ID:         1,
+					UserID:     1,
+					MetadataID: 1,
+					Data:       "some data",
+					CreatedAt:  timeNow,
+					UpdatedAt:  timeNow,
 				},
+				err: nil,
 			},
 		},
 	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			mock.ExpectBegin()
-			mock.ExpectQuery("INSERT INTO text_data").
-				WithArgs(
-					test.args.userID,
-					test.args.data).
-				WillReturnRows(
-					test.args.rows)
-
-			mock.ExpectCommit()
-
-			user, err := repo.Create(
-				context.Background(),
-				test.args.userID,
-				test.args.data)
-			assert.Equal(t, test.want.err, err)
-
-			assert.Equal(t, test.want.textData.ID, user.ID)
-			assert.Equal(t, test.want.textData.UserID, user.UserID)
-			assert.Equal(t, test.want.textData.Data, user.Data)
-		})
-	}
+	testPostgresCreate(t, repo, tests, query, mock)
 }
 
 func TestGetTextDataByID(t *testing.T) {
@@ -109,10 +79,10 @@ func TestGetTextDataByID(t *testing.T) {
 				id: 1,
 				rows: sqlmock.
 					NewRows([]string{
-						textDataTable.userIDColumnName,
-						textDataTable.dataColumnName,
-						textDataTable.createdAtColumnName,
-						textDataTable.updatedAtColumnName,
+						textDataTable.userID,
+						textDataTable.data,
+						textDataTable.createdAt,
+						textDataTable.updatedAt,
 					}).
 					AddRow(1, "data1", time, time),
 				sqlErr: nil,
@@ -132,12 +102,12 @@ func TestGetTextDataByID(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = ?",
-				textDataTable.userIDColumnName,
-				textDataTable.dataColumnName,
-				textDataTable.createdAtColumnName,
-				textDataTable.updatedAtColumnName,
-				textDataTable.tableName,
-				textDataTable.idColumnName)
+				textDataTable.userID,
+				textDataTable.data,
+				textDataTable.createdAt,
+				textDataTable.updatedAt,
+				textTableName,
+				textDataTable.id)
 
 			mock.ExpectQuery(query).
 				WithArgs(
@@ -181,10 +151,10 @@ func TestGetTextDataByUserID(t *testing.T) {
 				userID: 1,
 				rows: sqlmock.
 					NewRows([]string{
-						textDataTable.idColumnName,
-						textDataTable.dataColumnName,
-						textDataTable.createdAtColumnName,
-						textDataTable.updatedAtColumnName,
+						textDataTable.id,
+						textDataTable.data,
+						textDataTable.createdAt,
+						textDataTable.updatedAt,
 					}).
 					AddRow(1, "data1", time, time).
 					AddRow(2, "data2", time, time),
@@ -214,12 +184,12 @@ func TestGetTextDataByUserID(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = ?",
-				textDataTable.idColumnName,
-				textDataTable.dataColumnName,
-				textDataTable.createdAtColumnName,
-				textDataTable.updatedAtColumnName,
-				textDataTable.tableName,
-				textDataTable.userIDColumnName)
+				textDataTable.id,
+				textDataTable.data,
+				textDataTable.createdAt,
+				textDataTable.updatedAt,
+				textTableName,
+				textDataTable.userID)
 
 			mock.ExpectQuery(query).
 				WithArgs(

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -13,72 +14,41 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateBinaryData(t *testing.T) {
-	time := time.Now()
+func TestBinaryCreate(t *testing.T) {
+	query := fmt.Sprintf("INSERT INTO %s", binaryTableName)
+
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
 
 	var repo = NewBinaryRepository(db, logger.New().Testing())
-	type args struct {
-		userID int
-		data   []byte
-		rows   *sqlmock.Rows
-		sqlErr error
-	}
-	type want struct {
-		binaryData *model.BinaryData
-		err        error
-	}
 
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
+	tests := []testArgs[model.BinaryData]{
 		{
 			name: "Test OK",
-			args: args{
-				userID: 1,
-				data:   []byte("some data"),
+			mocks: mocks{
+				args: []driver.Value{1, []byte("some data")},
 				rows: sqlmock.
-					NewRows([]string{binaryTable.idColumnName, binaryTable.createdAtColumnName}).
-					AddRow(1, time),
-				sqlErr: nil,
+					NewRows([]string{binaryTable.id, binaryTable.metadataID, binaryTable.createdAt}).
+					AddRow(1, 1, timeNow),
 			},
-			want: want{
-				binaryData: &model.BinaryData{
-					ID:     1,
-					UserID: 1,
-					Data:   []byte("some data"),
+			args: args[model.BinaryData]{
+				data: model.BinaryData{UserID: 1, Data: []byte("some data")},
+			},
+			want: want[model.BinaryData]{
+				data: model.BinaryData{
+					ID:         1,
+					UserID:     1,
+					MetadataID: 1,
+					Data:       []byte("some data"),
+					CreatedAt:  timeNow,
+					UpdatedAt:  timeNow,
 				},
+				err: nil,
 			},
 		},
 	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			mock.ExpectBegin()
-			mock.ExpectQuery("INSERT INTO "+binaryTable.tableName).
-				WithArgs(
-					test.args.userID,
-					test.args.data).
-				WillReturnRows(
-					test.args.rows)
-
-			mock.ExpectCommit()
-
-			binaryData, err := repo.Create(
-				context.Background(),
-				test.args.userID,
-				test.args.data)
-			assert.Equal(t, test.want.err, err)
-
-			assert.Equal(t, test.want.binaryData.ID, binaryData.ID)
-			assert.Equal(t, test.want.binaryData.UserID, binaryData.UserID)
-			assert.Equal(t, test.want.binaryData.Data, binaryData.Data)
-		})
-	}
+	testPostgresCreate(t, repo, tests, query, mock)
 }
 
 func TestGetBinaryDataByID(t *testing.T) {
@@ -109,10 +79,10 @@ func TestGetBinaryDataByID(t *testing.T) {
 				id: 1,
 				rows: sqlmock.
 					NewRows([]string{
-						binaryTable.userIDColumnName,
-						binaryTable.dataColumnName,
-						binaryTable.createdAtColumnName,
-						binaryTable.updatedAtColumnName,
+						binaryTable.userID,
+						binaryTable.data,
+						binaryTable.createdAt,
+						binaryTable.updatedAt,
 					}).
 					AddRow(1, []byte("data1"), time, time),
 				sqlErr: nil,
@@ -132,12 +102,12 @@ func TestGetBinaryDataByID(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = ?",
-				binaryTable.userIDColumnName,
-				binaryTable.dataColumnName,
-				binaryTable.createdAtColumnName,
-				binaryTable.updatedAtColumnName,
-				binaryTable.tableName,
-				binaryTable.idColumnName)
+				binaryTable.userID,
+				binaryTable.data,
+				binaryTable.createdAt,
+				binaryTable.updatedAt,
+				binaryTableName,
+				binaryTable.id)
 
 			mock.ExpectQuery(query).
 				WithArgs(
@@ -181,10 +151,10 @@ func TestGetBinaryDataByUserID(t *testing.T) {
 				userID: 1,
 				rows: sqlmock.
 					NewRows([]string{
-						binaryTable.idColumnName,
-						binaryTable.dataColumnName,
-						binaryTable.createdAtColumnName,
-						binaryTable.updatedAtColumnName,
+						binaryTable.id,
+						binaryTable.data,
+						binaryTable.createdAt,
+						binaryTable.updatedAt,
 					}).
 					AddRow(1, []byte("data1"), time, time).
 					AddRow(2, []byte("data2"), time, time),
@@ -214,12 +184,12 @@ func TestGetBinaryDataByUserID(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			query := fmt.Sprintf("SELECT %s, %s, %s, %s FROM %s WHERE %s = \\$1",
-				binaryTable.idColumnName,
-				binaryTable.dataColumnName,
-				binaryTable.createdAtColumnName,
-				binaryTable.updatedAtColumnName,
-				binaryTable.tableName,
-				binaryTable.userIDColumnName)
+				binaryTable.id,
+				binaryTable.data,
+				binaryTable.createdAt,
+				binaryTable.updatedAt,
+				binaryTableName,
+				binaryTable.userID)
 
 			mock.ExpectQuery(query).
 				WithArgs(

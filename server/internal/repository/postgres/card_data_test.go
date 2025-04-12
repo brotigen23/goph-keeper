@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -13,53 +14,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateCardData(t *testing.T) {
-	timeNow := time.Now()
+func TestCardCreate(t *testing.T) {
+	query := fmt.Sprintf("INSERT INTO %s", cardsTableName)
+
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
 
 	var repo = NewCardsRepository(db, logger.New().Testing())
-	type card struct {
-		number         string
-		cardholderName string
-		expire         time.Time
-		cvv            string
-	}
 
-	type args struct {
-		card   card
-		userID int
-		rows   *sqlmock.Rows
-		sqlErr error
-	}
-	type want struct {
-		card *model.CardData
-		err  error
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
+	tests := []testArgs[model.CardData]{
 		{
 			name: "Test OK",
-			args: args{
-				card: card{
-					number:         "1234",
-					cardholderName: "user",
-					expire:         timeNow,
-					cvv:            "321",
-				},
-				userID: 1,
+			mocks: mocks{
+				args: []driver.Value{1, "1234", "user", timeNow, "321"},
 				rows: sqlmock.
-					NewRows([]string{cardsTable.idColumnName, cardsTable.createdAtColumnName}).
-					AddRow(1, timeNow),
-				sqlErr: nil,
+					NewRows([]string{cardsTable.idColumnName, cardsTable.metadataID, cardsTable.createdAtColumnName}).
+					AddRow(1, 1, timeNow),
 			},
-			want: want{
-				card: &model.CardData{
+			args: args[model.CardData]{
+				data: model.CardData{UserID: 1, Number: "1234", CardholderName: "user", Expire: timeNow, CVV: "321"},
+			},
+			want: want[model.CardData]{
+				data: model.CardData{
 					ID:             1,
 					UserID:         1,
 					Number:         "1234",
@@ -69,37 +46,11 @@ func TestCreateCardData(t *testing.T) {
 					CreatedAt:      timeNow,
 					UpdatedAt:      timeNow,
 				},
+				err: nil,
 			},
 		},
 	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			mock.ExpectBegin()
-			mock.ExpectQuery("INSERT INTO "+cardsTable.tableName).
-				WithArgs(
-					test.args.userID,
-					test.args.card.number,
-					test.args.card.cardholderName,
-					test.args.card.expire,
-					test.args.card.cvv).
-				WillReturnRows(
-					test.args.rows)
-
-			mock.ExpectCommit()
-
-			card, err := repo.Create(
-				context.Background(),
-				test.args.userID,
-				test.args.card.number,
-				test.args.card.cardholderName,
-				test.args.card.expire,
-				test.want.card.CVV)
-			assert.Equal(t, test.want.err, err)
-
-			assert.Equal(t, test.want.card, card)
-		})
-	}
+	testPostgresCreate(t, repo, tests, query, mock)
 }
 
 func TestGetCardDataByID(t *testing.T) {
@@ -168,7 +119,7 @@ func TestGetCardDataByID(t *testing.T) {
 				cardsTable.cvvColumnName,
 				cardsTable.createdAtColumnName,
 				cardsTable.updatedAtColumnName,
-				cardsTable.tableName,
+				cardsTableName,
 				cardsTable.idColumnName)
 
 			mock.ExpectQuery(query).
@@ -257,7 +208,7 @@ func TestGetCardDataByUserID(t *testing.T) {
 				cardsTable.cvvColumnName,
 				cardsTable.createdAtColumnName,
 				cardsTable.updatedAtColumnName,
-				cardsTable.tableName,
+				cardsTableName,
 				cardsTable.userIDColumnName)
 
 			mock.ExpectQuery(query).
