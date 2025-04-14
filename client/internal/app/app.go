@@ -2,44 +2,16 @@ package app
 
 import (
 	"os"
-	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/brotigen23/goph-keeper/client/internal/client"
-	"github.com/brotigen23/goph-keeper/client/internal/model"
+	"github.com/brotigen23/goph-keeper/client/internal/ui/root"
+	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 )
-
-var (
-	logPath     = filepath.Join(".", "log")
-	logFileName = logPath + "/" + time.Now().String() + ".log"
-)
-
-func createOrOpenLogFile(path string) (*os.File, error) {
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-	logFile, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		return nil, err
-	}
-	return logFile, nil
-}
 
 func Run() {
-	logFile, err := createOrOpenLogFile(logPath)
-	if err != nil {
-		log.Error("cannot create or open log file", "err:", err)
-		return
-	}
-	defer logFile.Close()
-
-	logger := log.New(os.Stderr)
-	logger.SetLevel(log.DebugLevel)
-	logger.SetOutput(logFile)
+	logger := logger.New().Default()
 
 	logger.Info(
 		"OS INFO:",
@@ -48,12 +20,12 @@ func Run() {
 		"TERM:", os.Getenv("TERM"))
 	client := client.New("http://localhost:8080")
 	// Main
-	mainModel := model.NewMainModel(logger, client)
+	rootModel := root.New(logger, client)
 
-	p := tea.NewProgram(mainModel, tea.WithAltScreen())
+	p := tea.NewProgram(rootModel, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
-		logger.Error("error", "err", err)
+		logger.Error(err)
 		os.Exit(1)
 	}
 }

@@ -7,4 +7,5 @@ var (
 	ErrUserNotFound = errors.New("User not found")
 
 	ErrIncorrectPassword = errors.New("Incorrect password")
+	ErrIncorrectUserID   = errors.New("Incorrect user id")
 )

@@ -8,7 +8,7 @@ import (
 
 type accessClaims struct {
 	jwt.RegisteredClaims
-	id int
+	ID int
 }
 type refreshClaims struct {
 	jwt.RegisteredClaims
@@ -19,7 +19,7 @@ func createAccessToken(id int, key string, expires time.Duration) (string, error
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expires)),
 		},
-		id: id,
+		ID: id,
 	})
 
 	tokenString, err := token.SignedString([]byte(key))
@@ -72,6 +72,5 @@ func GetIDFromJWT(tokenString string, key string) (int, error) {
 	if !token.Valid {
 		return 0, ErrTokenIsInvalid
 	}
-
-	return claims.id, nil
+	return claims.ID, nil
 }

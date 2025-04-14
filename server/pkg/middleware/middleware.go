@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -71,6 +72,7 @@ func (m Middleware) Auth(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		fmt.Println(id)
 		ctx := context.WithValue(r.Context(), "id", id)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

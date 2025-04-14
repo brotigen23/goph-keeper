@@ -144,10 +144,47 @@ func (r accountsRepository) GetByUserID(ctx context.Context, userID int) ([]mode
 	return ret, nil
 }
 
-func (r accountsRepository) Update(context.Context, model.AccountData) (*model.AccountData, error) {
-	return nil, nil
-}
+func (r accountsRepository) Update(ctx context.Context, data model.AccountData) (*model.AccountData, error) {
+	ret := &model.AccountData{
+		UserID:    data.UserID,
+		Login:     data.Login,
+		Password:  data.Password,
+		CreatedAt: data.CreatedAt,
+	}
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	query := fmt.Sprintf(
+		`UPDATE %s 
+		SET 
+		%s = $1,
+		%s = $2
+		WHERE %s = $3
+		RETURNING %s, %s, %s`,
+		accountsTableName,
+		accountsTable.login, accountsTable.password,
+		accountsTable.id,
+		accountsTable.id, accountsTable.metadataID, accountsTable.updatedAt)
 
+	err = tx.QueryRowContext(ctx, query, data.Login, data.Password, data.ID).
+		Scan(&ret.ID, &ret.MetadataID, &ret.UpdatedAt)
+
+	if err != nil {
+		r.logger.Error(err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, rollbackErr
+		}
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
 func (r accountsRepository) DeleteByID(context.Context, int) (*model.AccountData, error) {
 	return nil, nil
 }

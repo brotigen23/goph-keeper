@@ -1,12 +1,8 @@
 package app
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/brotigen23/goph-keeper/server/internal/config"
 	"github.com/brotigen23/goph-keeper/server/internal/handler"
-	"github.com/brotigen23/goph-keeper/server/internal/mapper"
 	"github.com/brotigen23/goph-keeper/server/internal/repository/postgres"
 	"github.com/brotigen23/goph-keeper/server/internal/service"
 	"github.com/brotigen23/goph-keeper/server/pkg/database"
@@ -55,12 +51,6 @@ func Run() error {
 		cardsRepo,
 		metadataRepo,
 	)
-	acc, metadata, err := serviceAggregator.GetUserAccountsData(context.Background(), 1)
-	if err != nil {
-		logger.Error(err)
-	}
-	dto := mapper.AccountsToDTO(acc, metadata)
-	fmt.Println(dto)
 	//Handler
 	middleware := middleware.New(logger, config.JWT.AccessKey, config.JWT.RefreshKey)
 	handler := handler.New(config, serviceAggregator)
@@ -80,7 +70,10 @@ func Run() error {
 	// With auth
 	router.Route("/user", func(r chi.Router) {
 		r.Use(middleware.Auth)
+		r.Post("/accounts", handler.AccountsDataPost)
+		r.Put("/accounts", handler.AccountsDataPut)
 		r.Get("/accounts", handler.AccountsDataGet)
+		r.Put("/metadata", handler.MetadataPut)
 		r.Get("/text", nil)
 		r.Get("/binary", nil)
 		r.Get("/cards", nil)

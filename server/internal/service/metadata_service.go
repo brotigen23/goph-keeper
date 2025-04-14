@@ -17,16 +17,21 @@ func NewMetadataService(repo repository.Metadata) *MetadataService {
 	}
 }
 
-func (s MetadataService) CreateAccount(ctx context.Context, rowID int, data string) (*model.Metadata, error) {
-	return nil, nil
-}
-
 func (s MetadataService) GetByID(ctx context.Context, id int) (*model.Metadata, error) {
 	ret, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
+	return ret, nil
+}
+
+func (s MetadataService) Update(ctx context.Context, id int, data string) (*model.Metadata, error) {
+	toSave := &model.Metadata{ID: id, Data: data}
+	ret, err := s.repo.Update(ctx, *toSave)
+	if err != nil {
+		return nil, err
+	}
 	return ret, nil
 }
 

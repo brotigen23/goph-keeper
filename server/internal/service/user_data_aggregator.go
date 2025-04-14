@@ -55,17 +55,16 @@ func (a UserDataAggregator) ValidateUserSingIn(ctx context.Context, login, passw
 	return nil, nil
 }
 
-func (a UserDataAggregator) CreateUserAccountsData(ctx context.Context,
-	userID int, login, password string) (*model.AccountData, string, error) {
-	_, err := a.accountsService.Create(ctx, userID, login, password)
+func (a UserDataAggregator) CreateAccount(ctx context.Context,
+	userID int, login, password string) (*model.AccountData, error) {
+	ret, err := a.accountsService.Create(ctx, userID, login, password)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-
-	return nil, "", nil
+	return ret, nil
 }
 
-func (a UserDataAggregator) GetUserAccountsData(ctx context.Context,
+func (a UserDataAggregator) GetAccounts(ctx context.Context,
 	userID int) ([]model.AccountData, []model.Metadata, error) {
 	ret, err := a.accountsService.GetByUserID(ctx, userID)
 	if err != nil {
@@ -82,6 +81,34 @@ func (a UserDataAggregator) GetUserAccountsData(ctx context.Context,
 	return ret, retMetadata, nil
 }
 
-func (a UserDataAggregator) CreateNewTextData(ctx context.Context, data string) (*model.TextData, error) {
-	return nil, nil
+func (a UserDataAggregator) UpdateAccount(ctx context.Context,
+	userID, id int, login, password *string) (*model.AccountData, error) {
+	// Update Account
+	oldAccount, err := a.accountsService.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if userID != oldAccount.UserID {
+		return nil, ErrIncorrectUserID
+	}
+	if login != nil {
+		oldAccount.Login = *login
+	}
+
+	newAccount, err := a.accountsService.repo.Update(ctx, *oldAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	return newAccount, nil
+}
+
+func (a UserDataAggregator) UpdateMetadata(ctx context.Context,
+	id int, metadata string) (*model.Metadata, error) {
+	newMetadata := model.Metadata{ID: id, Data: metadata}
+	savedMetadata, err := a.metadataService.repo.Update(ctx, newMetadata)
+	if err != nil {
+		return nil, err
+	}
+	return savedMetadata, nil
 }

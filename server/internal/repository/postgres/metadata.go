@@ -94,8 +94,32 @@ func (r metadataRepository) GetByID(ctx context.Context, id int) (*model.Metadat
 	return ret, nil
 }
 
-func (r metadataRepository) Update(context.Context, model.Metadata) (*model.Metadata, error) {
-	return nil, nil
+func (r metadataRepository) Update(ctx context.Context, data model.Metadata) (*model.Metadata, error) {
+
+	ret := &model.Metadata{ID: data.ID, Data: data.Data}
+
+	query := fmt.Sprintf("UPDATE %s SET %s = $1 WHERE %s = $2 RETURNING %s, %s",
+		metadataTableName, metadataTable.data, metadataTable.id,
+		metadataTable.createdAt, metadataTable.updatedAt)
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	err = r.db.QueryRowContext(ctx, query, data.Data, data.ID).
+		Scan(
+			&ret.CreatedAt,
+			&ret.UpdatedAt)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, rollbackErr
+		}
+		return nil, err
+	}
+
+	err = tx.Commit()
+	return ret, err
 }
 
 func (r metadataRepository) DeleteByID(context.Context, int) (*model.Metadata, error) {

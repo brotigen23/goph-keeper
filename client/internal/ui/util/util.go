@@ -3,7 +3,7 @@ package util
 import (
 	"strconv"
 
-	"github.com/brotigen23/goph-keeper/client/internal/style"
+	"github.com/brotigen23/goph-keeper/client/internal/ui/style"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mbndr/figlet4go"
 )
