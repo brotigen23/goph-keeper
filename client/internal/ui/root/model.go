@@ -1,7 +1,8 @@
 package root
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/client"
+	"github.com/brotigen23/goph-keeper/client/internal/api"
+	"github.com/brotigen23/goph-keeper/client/internal/ui/content"
 	"github.com/brotigen23/goph-keeper/client/internal/ui/login"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,7 +13,7 @@ const minHeigth = 25
 
 const (
 	loginPage = iota
-	loginContent
+	contentPage
 )
 
 type model struct {
@@ -22,7 +23,7 @@ type model struct {
 	content tea.Model
 
 	logger *logger.Logger
-	client *client.Client
+	client *api.Client
 
 	windowSize struct {
 		width  int
@@ -30,10 +31,11 @@ type model struct {
 	}
 }
 
-func New(logger *logger.Logger, client *client.Client) *model {
+func New(logger *logger.Logger, client *api.Client) *model {
 	return &model{
 		currentPage: loginPage,
 		login:       login.New(logger, client),
+		content:     content.New(logger, client),
 
 		logger: logger,
 

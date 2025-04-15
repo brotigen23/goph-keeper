@@ -14,6 +14,8 @@ func (m model) View() string {
 	switch m.currentPage {
 	case loginPage:
 		frame = m.login.View()
+	case contentPage:
+		frame = m.content.View()
 	}
 
 	frame = lipgloss.Place(m.windowSize.width, m.windowSize.height, lipgloss.Center, lipgloss.Center, frame)

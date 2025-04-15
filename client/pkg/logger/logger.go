@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"time"
 )
 
 // Logger
@@ -23,7 +22,7 @@ func New() *Logger {
 
 func (l *Logger) Default() *Logger {
 	logPath := filepath.Join(".", "log")
-	logFileName := logPath + "/" + time.Now().String() + ".log"
+	logFileName := logPath + "/" + ".log"
 
 	err := os.MkdirAll(logPath, os.ModePerm)
 	if err != nil {

@@ -17,12 +17,12 @@ func (h Handler) MetadataPut(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, ErrRequestBodyUnableToRead.Error(), http.StatusBadRequest)
 		return
 	}
-	if newMetadata.Data == nil {
+	if newMetadata.Metadata == nil {
 		http.Error(w, "Nothing to update", http.StatusBadRequest)
 		return
 	}
 	savedMetadata, err := h.service.UpdateMetadata(context.Background(),
-		newMetadata.ID, *newMetadata.Data)
+		newMetadata.ID, *newMetadata.Metadata)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

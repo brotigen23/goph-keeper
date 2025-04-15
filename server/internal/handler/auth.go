@@ -73,7 +73,8 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, ErrIncorrectPassword.Error(), http.StatusUnauthorized)
 		return
 	default:
-
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
 	}
 
 	accessExpire := time.Hour * 24

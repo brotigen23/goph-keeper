@@ -5,6 +5,7 @@ import (
 
 	"github.com/brotigen23/goph-keeper/server/internal/model"
 	"github.com/brotigen23/goph-keeper/server/internal/repository"
+	"github.com/brotigen23/goph-keeper/server/pkg/crypt"
 )
 
 type UserDataAggregator struct {
@@ -52,7 +53,20 @@ func (a UserDataAggregator) CreateNewUser(ctx context.Context, login, password s
 }
 
 func (a UserDataAggregator) ValidateUserSingIn(ctx context.Context, login, password string) (*model.User, error) {
-	return nil, nil
+	user, err := a.userService.repo.GetByLogin(ctx, login)
+	switch err {
+	case nil:
+		break
+	case repository.ErrUserNotFound:
+		return nil, ErrUserNotFound
+	default:
+		return nil, err
+	}
+	err = crypt.CheckPasswordHash(password, user.Password)
+	if err != nil {
+		return nil, ErrIncorrectPassword
+	}
+	return user, nil
 }
 
 func (a UserDataAggregator) CreateAccount(ctx context.Context,

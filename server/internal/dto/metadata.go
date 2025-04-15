@@ -6,8 +6,8 @@ type Metadata struct {
 }
 
 type MetadataPut struct {
-	ID   int     `json:"id"`
-	Data *string `json:"data,omitempty"`
+	ID       int     `json:"id"`
+	Metadata *string `json:"data,omitempty"`
 }
 
 type MetadataDelete struct {

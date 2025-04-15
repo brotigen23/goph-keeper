@@ -19,7 +19,7 @@ type AccountPut struct {
 type AccountsGet struct {
 	BaseData
 	AccountData
-	Metadata
+	Metadata Metadata
 }
 
 type AccountDelete struct {

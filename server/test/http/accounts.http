@@ -1,7 +1,7 @@
 POST http://localhost:8080/user/accounts HTTP/1.1
 content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3MDM3NjMsIklEIjoxMn0.PCAkTdFAaTrjbQdr2c_7YDGiNOS03k6gHKnmV4IPCsQ
-Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4NzY1NjMsIklEIjowfQ.uD3JXonERjprCaNqnVZMxbBzoQ-igyB6vjmW1o3jQ-0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4MDg2NzcsIklEIjoxNX0.01IiFPQQOxgirIKWghF54nAcR7uUpj_VupINAyhfFMk
+Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ5ODE0NzcsIklEIjowfQ.1YpqTxwLCWwXeedW2xpAd9Oa2rwnfJxxK5XdGyajR_g
 
 {
     "login": "usedcvzfr",
