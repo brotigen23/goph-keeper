@@ -5,7 +5,7 @@ import (
 	"runtime"
 
 	"github.com/brotigen23/goph-keeper/client/internal/api"
-	"github.com/brotigen23/goph-keeper/client/internal/ui/root"
+	"github.com/brotigen23/goph-keeper/client/internal/ui/app"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -20,7 +20,7 @@ func Run() {
 		"TERM:", os.Getenv("TERM"))
 	client := api.New("http://localhost:8080")
 	// Main
-	rootModel := root.New(logger, client)
+	rootModel := app.New(logger, client)
 
 	p := tea.NewProgram(rootModel, tea.WithAltScreen())
 

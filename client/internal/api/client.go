@@ -30,6 +30,24 @@ func (c Client) Ping() error {
 	_, err := c.client.R().Get("/ping")
 	return err
 }
+func (c *Client) Register(login, password string) Response {
+	credentials := dto.Login{Login: login, Password: password}
+	requestBody, err := json.Marshal(credentials)
+	if err != nil {
+		return Response{Err: err}
+	}
+	request := c.client.R()
+	request.Body = requestBody
+	response, err := request.Post("/register")
+	if err != nil {
+		return Response{Err: err}
+	}
+	authHeader := response.Header()
+	token := strings.TrimPrefix(authHeader.Get("Authorization"), "Bearer ")
+	c.JWT = token
+
+	return Response{Body: string(response.Body()), StatusCode: response.StatusCode(), Err: nil}
+}
 
 func (c *Client) Login(login, password string) Response {
 	credentials := dto.Login{Login: login, Password: password}
@@ -48,6 +66,17 @@ func (c *Client) Login(login, password string) Response {
 	c.JWT = token
 
 	return Response{Body: string(response.Body()), StatusCode: response.StatusCode(), Err: nil}
+}
+
+func (c Client) GetData(path string) Response {
+	request := c.client.R()
+	request.Header.Set("Authorization", "Bearer "+c.JWT)
+	response, err := request.Get(path)
+	if err != nil {
+		return Response{Err: err}
+	}
+
+	return Response{StatusCode: response.StatusCode(), Body: string(response.Body())}
 }
 
 func (c Client) GetAccounts() Response {

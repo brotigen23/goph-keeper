@@ -1,9 +1,8 @@
-package root
+package app
 
 import (
 	"github.com/brotigen23/goph-keeper/client/internal/api"
-	"github.com/brotigen23/goph-keeper/client/internal/ui/content"
-	"github.com/brotigen23/goph-keeper/client/internal/ui/login"
+	"github.com/brotigen23/goph-keeper/client/internal/ui/view/auth"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -19,8 +18,8 @@ const (
 type model struct {
 	currentPage int
 
-	login   tea.Model
-	content tea.Model
+	authPage tea.Model
+	dataPage tea.Model
 
 	logger *logger.Logger
 	client *api.Client
@@ -34,8 +33,8 @@ type model struct {
 func New(logger *logger.Logger, client *api.Client) *model {
 	return &model{
 		currentPage: loginPage,
-		login:       login.New(logger, client),
-		content:     content.New(logger, client),
+
+		authPage: auth.NewManager(logger, client),
 
 		logger: logger,
 
@@ -45,7 +44,7 @@ func New(logger *logger.Logger, client *api.Client) *model {
 
 func (m model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
-		m.login.Init(),
+		m.authPage.Init(),
 	}
 	return tea.Batch(cmds...)
 }

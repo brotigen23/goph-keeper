@@ -1,4 +1,4 @@
-package login
+package register
 
 import (
 	"net/http"
@@ -11,20 +11,20 @@ func PingServer(ip string) tea.Msg {
 	return nil
 }
 
-func (m model) SignIn() tea.Msg {
-	const statusAccepted = http.StatusAccepted
-
+func (m model) SignUp() tea.Msg {
 	login := m.inputs[0].Value()
 	password := m.inputs[1].Value()
 	m.logger.Info("sign in", "login", login, "password", password)
-	response := m.client.Login(login, password)
+	response := m.client.Register(login, password)
 	// If some error
 	if err := response.Err; err != nil {
 		m.logger.Error(err)
 	}
 
-	if response.StatusCode == 202 {
-		return LoginSuccessMgs{}
+	if response.StatusCode == http.StatusAccepted {
+		return SignUpSuccessMsg{
+			Username: login,
+		}
 	}
 
 	return response

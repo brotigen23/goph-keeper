@@ -12,6 +12,6 @@ func MetadataToDTO(metadata model.Metadata) *dto.Metadata {
 			CreatedAt: metadata.CreatedAt,
 			UpdatedAt: metadata.UpdatedAt,
 		},
-		Data: metadata.Data,
+		Metadata: metadata.Data,
 	}
 }

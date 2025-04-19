@@ -8,8 +8,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const logoStr = "goph-keeper"
-
 type model struct {
 	inputs       []textinput.Model
 	inputFocus   int

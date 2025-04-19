@@ -1,4 +1,4 @@
-package root
+package app
 
 import (
 	"github.com/brotigen23/goph-keeper/client/internal/ui/util"
@@ -13,9 +13,9 @@ func (m model) View() string {
 	var frame string
 	switch m.currentPage {
 	case loginPage:
-		frame = m.login.View()
+		frame = m.authPage.View()
 	case contentPage:
-		frame = m.content.View()
+		frame = m.dataPage.View()
 	}
 
 	frame = lipgloss.Place(m.windowSize.width, m.windowSize.height, lipgloss.Center, lipgloss.Center, frame)

@@ -46,11 +46,15 @@ func (s AccountsService) Update(ctx context.Context, id, userID int, login, pass
 	}
 
 	return new, nil
-
 }
 func (s AccountsService) GetByUserID(ctx context.Context, userID int) ([]model.AccountData, error) {
 	data, err := s.repo.GetByUserID(ctx, userID)
-	if err != nil {
+	switch err {
+	case nil:
+		break
+	case repository.ErrAccountsDataNotFound:
+		return nil, ErrDataNotFound
+	default:
 		return nil, err
 	}
 	return data, nil

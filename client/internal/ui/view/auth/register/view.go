@@ -1,19 +1,13 @@
-package login
+package register
 
 import (
 	"github.com/brotigen23/goph-keeper/client/internal/ui/style"
-	"github.com/brotigen23/goph-keeper/client/internal/ui/util"
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) View() string {
 
 	var frame string
-
-	logo := util.RenderASCII(logoStr)
-	frame += logo
-
-	frame += style.Gap
 
 	login := m.inputs[0].View()
 	login = style.Bordered(login, m.inputFocus == 0)

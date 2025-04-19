@@ -8,4 +8,6 @@ var (
 
 	ErrIncorrectPassword = errors.New("Incorrect password")
 	ErrIncorrectUserID   = errors.New("Incorrect user id")
+
+	ErrDataNotFound = errors.New("Data not found")
 )

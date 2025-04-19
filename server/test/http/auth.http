@@ -2,12 +2,21 @@ POST http://localhost:8080/register HTTP/1.1
 content-type: application/json
 
 {
-    "login": "usasdsedsfsr1s2ss",
-    "password": "pass1"
+    "login": "u",
+    "password": "p"
 }
 
 ###
 
+POST http://localhost:8080/login HTTP/1.1
+content-type: application/json
+
+{
+    "login": "u",
+    "password": "p"
+}
+
+###
 GET http://localhost:8080/user/accounts HTTP/1.1
 content-type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ1NDQ4Njl9.rWHPSK7GlLZXgdEboUY7E0zkC0aa9sHEAS4iI5U4JpY

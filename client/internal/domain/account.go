@@ -1,15 +1,8 @@
 package domain
 
-import "time"
-
 type AccountData struct {
-	ID         int
-	UserID     int
-	MetadataID int
-
-	Login    string
-	Password string
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	BaseData
+	Login    string `json:"login" table:"true"`
+	Password string `json:"password" table:"true"`
+	Metadata `json:"metadata"`
 }

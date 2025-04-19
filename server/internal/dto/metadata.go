@@ -2,7 +2,7 @@ package dto
 
 type Metadata struct {
 	BaseData
-	Data string
+	Metadata string `json:"data"`
 }
 
 type MetadataPut struct {
