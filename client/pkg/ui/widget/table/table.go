@@ -5,44 +5,51 @@ import (
 	"reflect"
 
 	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-runewidth"
 )
 
-type Table[T any] struct {
+type Model[T any] struct {
+	items []T
+
 	table          table.Model
 	maxColumnWidth int
+
+	style table.Styles
 }
 
 // Creates a new table with columns of T struct, with no rows
-func New[T any]() *Table[T] {
+func New[T any]() *Model[T] {
 	columns, _ := generateColumnsAndRows[T](nil)
 
 	// Create table
 	table := table.New(
 		table.WithColumns(columns),
+		table.WithFocused(true),
 	)
+	t := table
 
-	return &Table[T]{
+	t.SetStyles(FromExample())
+	return &Model[T]{
 		maxColumnWidth: 50,
-		table:          table,
+		table:          t,
 	}
 }
 
 // Return representation of table
-func (t Table[T]) View() string {
-	return t.table.View()
+func (t Model[T]) Init() tea.Cmd {
+	return nil
 }
 
 // Add rows into table
-func (t *Table[T]) Refresh(rows []T) {
-	// Create new rows
+func (t *Model[T]) Refresh(rows []T) {
+	t.items = rows
 	_, newRows := generateColumnsAndRows(rows)
-	// Add rows to table
 	t.table.SetRows(newRows)
 	t.autoResizeWidth()
 }
 
-func (t *Table[T]) autoResizeWidth() {
+func (t *Model[T]) autoResizeWidth() {
 	columns := t.table.Columns()
 	rows := t.table.Rows()
 
@@ -76,13 +83,11 @@ func (t *Table[T]) autoResizeWidth() {
 	t.table.SetColumns(cols)
 }
 
-func (t *Table[T]) CursorUp() {
-	cursor := t.table.Cursor()
-	t.table.SetCursor(cursor - 1)
-}
-func (t *Table[T]) CursorDown() {
-	cursor := t.table.Cursor()
-	t.table.SetCursor(cursor + 1)
+func (t Model[T]) GetCurrentItem() *T {
+	if t.items == nil {
+		return nil
+	}
+	return &t.items[t.table.Cursor()]
 }
 
 func generateColumnsAndRows[T any](items []T) ([]table.Column, []table.Row) {

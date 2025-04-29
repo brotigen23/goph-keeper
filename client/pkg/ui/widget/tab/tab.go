@@ -25,7 +25,11 @@ func New(tabsName []string, tabs []tea.Model) *Tab {
 }
 
 func (t Tab) Init() tea.Cmd {
-	return t.tabs[0].Init()
+	cmds := []tea.Cmd{}
+	for i := range t.tabs {
+		cmds = append(cmds, t.tabs[i].Init())
+	}
+	return tea.Batch(cmds...)
 }
 
 func (t Tab) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -37,21 +41,13 @@ func (t Tab) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			d := s[len(s)-1]
 			if d >= '1' && d <= '9' {
 				t.currentTab = int(d - '1')
-				return t, nil
 			}
 		}
 	}
-	// Pages
-	switch t.currentTab {
-	case 0:
-		model, cmd := t.tabs[0].Update(msg)
-		t.tabs[0] = model
-		cmds = append(cmds, cmd)
-	case 1:
-		model, cmd := t.tabs[1].Update(msg)
-		t.tabs[1] = model
-		cmds = append(cmds, cmd)
-	}
+
+	model, cmd := t.tabs[0].Update(msg)
+	t.tabs[t.currentTab] = model
+	cmds = append(cmds, cmd)
 	return t, tea.Batch(cmds...)
 }
 
@@ -69,4 +65,8 @@ func (t Tab) renderTabsHeader() string {
 		}
 	}
 	return tabsHeader
+}
+
+func (t Tab) GetCurrentTab() string {
+	return t.tabsNames[t.currentTab]
 }

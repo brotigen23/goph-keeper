@@ -1,44 +1,55 @@
 package form
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type Form[T any] struct {
-	data *T
+	data T
 
 	inputs     []textinput.Model
 	fieldNames []string
 	focus      int
+
+	style Style
 }
 
-func NewWithData[T any](data *T) *Form[T] {
-	typ := reflect.TypeOf(data)
+func NewWithData[T any](data T) *Form[T] {
 	val := reflect.ValueOf(data)
+	inputs, fieldNames := generateFields[T](val)
 
-	inputs := make([]textinput.Model, typ.NumField())
-	fieldNames := make([]string, typ.NumField())
+	for i, name := range fieldNames {
+		field := val.FieldByName(name)
+		if field.IsValid() {
+			var strValue string
 
-	for i := range typ.NumField() {
-		field := typ.Field(i)
-		fieldNames[i] = field.Name
+			switch field.Kind() {
+			case reflect.String:
+				strValue = field.String()
+			case reflect.Int, reflect.Int64, reflect.Int32:
+				strValue = fmt.Sprintf("%d", field.Int())
+			case reflect.Float64, reflect.Float32:
+				strValue = fmt.Sprintf("%f", field.Float())
+			case reflect.Bool:
+				strValue = fmt.Sprintf("%t", field.Bool())
+			case reflect.Struct:
+				if t, ok := field.Interface().(time.Time); ok {
+					strValue = t.String()
+				}
+			}
 
-		input := textinput.New()
-		input.Placeholder = field.Name
-		input.Prompt = field.Name + ": "
-
-		if val.Field(i).Kind() == reflect.String {
-			input.SetValue(val.Field(i).String())
+			inputs[i].SetValue(strValue)
 		}
-
-		if i == 0 {
-			input.Focus()
-		}
-
-		inputs[i] = input
+	}
+	if len(inputs) > 0 {
+		inputs[0].Focus()
 	}
 
 	return &Form[T]{
@@ -46,80 +57,79 @@ func NewWithData[T any](data *T) *Form[T] {
 		inputs:     inputs,
 		fieldNames: fieldNames,
 		focus:      0,
+		style:      DefaultStyle(),
 	}
 }
 
-func (m Form[T]) submit() tea.Cmd {
-	val := reflect.ValueOf(&m.data).Elem()
+func New[T any]() *Form[T] {
+	var zero T
+	val := reflect.ValueOf(zero)
+	inputs, fieldNames := generateFields[T](val)
+	if len(inputs) > 0 {
+		inputs[0].Focus()
+	}
+	ret := &Form[T]{
+		inputs:     inputs,
+		fieldNames: fieldNames,
+		focus:      0,
+		style:      DefaultStyle(),
+	}
+	ret.Init()
+	return ret
+}
 
-	for i, name := range m.fieldNames {
-		field := val.FieldByName(name)
-		if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
-			field.SetString(m.inputs[i].Value())
+func generateFields[T any](val reflect.Value) ([]textinput.Model, []string) {
+	typ := val.Type()
+	if val.Kind() == reflect.Pointer {
+		val = val.Elem()
+		typ = typ.Elem()
+	}
+	fields := getAllFields(typ)
+	var inputs []textinput.Model
+	var fieldNames []string
+
+	for _, field := range fields {
+		formTag := field.Tag.Get("form")
+
+		if formTag == "" {
+			continue
 		}
+
+		parts := strings.Split(formTag, ",")
+		if len(parts) == 0 || parts[0] != "true" {
+			continue
+		}
+
+		width := 50
+		maxLen := 0
+
+		if len(parts) > 1 {
+			if w, err := strconv.Atoi(parts[1]); err == nil {
+				width = w
+			}
+		}
+		if len(parts) > 2 {
+			if l, err := strconv.Atoi(parts[2]); err == nil {
+				maxLen = l
+			}
+		}
+
+		input := textinput.New()
+		input.Placeholder = field.Name
+		input.Prompt = ""
+		input.Width = width
+
+		if maxLen > 0 {
+			input.CharLimit = maxLen
+		}
+
+		inputs = append(inputs, input)
+		fieldNames = append(fieldNames, field.Name)
 	}
 
-	return func() tea.Msg {
-		return SubmitFormMsg[T]{Data: m.data}
-	}
-}
-
-func New[T any](inputsText []string) *Form[T] {
-	inputs := make([]textinput.Model, len(inputsText))
-	for i := range inputs {
-		inputs[i] = textinput.New()
-
-		inputs[i].Prompt = inputsText[i]
-		inputs[i].Width = 50
-	}
-	inputs[0].Focus()
-
-	return &Form[T]{
-		inputs: inputs,
-		focus:  0,
-	}
+	return inputs, fieldNames
 }
 
 func (m Form[T]) Init() tea.Cmd {
-	return nil
-}
-
-func (m Form[T]) View() string {
-
-	var frame string
-	for i := range m.inputs {
-		frame += m.inputs[i].Prompt
-		frame += m.inputs[i].View()
-	}
-	return frame
-}
-func (m *Form[T]) changeInput() {
-	m.focus++
-	if m.focus > 1 {
-		m.focus = 0
-	}
-	for i := range m.inputs {
-		if i == m.focus {
-			m.inputs[m.focus].Focus()
-			continue
-		}
-		m.inputs[i].Blur()
-	}
-}
-func (m *Form[T]) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
-
-	for i := range m.inputs {
-		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
-}
-
-func (m Form[T]) EditConfirm() tea.Msg {
-	return nil
-}
-
-func (m Form[T]) GetValues() *T {
 	return nil
 }
