@@ -21,8 +21,16 @@ coverage:
 	fi
 
 mockgen:
-	~/go/bin/mockgen -source=./internal/repository/repository.go -destination=./internal/repository/mock/repository.go -package=mock
+	~/go/bin/mockgen -source=./internal/repository/repository.go -destination=./internal/repository/mock/userRepository.go -package=mock UserRepo
 
 
+swag:
+	rm -rf ./docs/
+	~/go/bin/swag init \
+    -g ./cmd/server/main.go \
+	--output ./docs \
+    --parseDependency \
+    --parseInternal \
+    --parseDepth 3
 
 .PHONY: test coverage mockgen

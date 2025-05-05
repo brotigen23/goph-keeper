@@ -19,8 +19,8 @@ content-type: application/json
 ###
 GET http://localhost:8080/user/accounts HTTP/1.1
 content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ1NDQ4Njl9.rWHPSK7GlLZXgdEboUY7E0zkC0aa9sHEAS4iI5U4JpY
-Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3MTc2Njl9.mtW19JiWISE49EQNU03oz4cctxpbjCSzP0BYxeDlWFk
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDYxNzkyMDcsIklEIjoxNX0.IKCS2Tm02-fIJp8d_aanZTUtfWxUhrvuSYG5VaDJ0GQ
+Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDYzNTIwMDcsIklEIjowfQ.HyuDPJ0McSFc7Jo33dyhDrmaUJ_ExEXFU_ZnsmVfmys
 
 {
     "login": "user1sfas2",

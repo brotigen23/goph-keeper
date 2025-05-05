@@ -1,7 +1,7 @@
 POST http://localhost:8080/user/accounts HTTP/1.1
 content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDU3NTEwODksIklEIjoxNX0.eALRed6l9HK_OOs6s62n4OcTn2xJNNDVcO9mMTxraeY
-Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDU5MjM4ODksIklEIjowfQ.VfA2B2gPoZDLMjDbpvLHz_apaERLPxCQLROa7gCvvbk
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDYxNzkyMDcsIklEIjoxNX0.IKCS2Tm02-fIJp8d_aanZTUtfWxUhrvuSYG5VaDJ0GQ
+Refresh-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDYzNTIwMDcsIklEIjowfQ.HyuDPJ0McSFc7Jo33dyhDrmaUJ_ExEXFU_ZnsmVfmys
 
 {
     "login": "user1",

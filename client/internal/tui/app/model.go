@@ -9,7 +9,6 @@ import (
 	"runtime"
 
 	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
-	"github.com/brotigen23/goph-keeper/client/internal/tui/view/auth"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -61,7 +60,7 @@ func New(logger *logger.Logger, client *rest.Client) *model {
 	return &model{
 		currentPage: loginPage,
 
-		authPage: auth.NewManager(logger, client),
+		//authPage: auth.NewManager(logger, client),
 
 		logger: logger,
 

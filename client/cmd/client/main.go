@@ -9,7 +9,6 @@ import (
 func main() {
 	isTUI := flag.Bool("t", false, "Run in tui")
 	flag.Parse()
-
 	if *isTUI {
 	} else {
 		app := app.New()

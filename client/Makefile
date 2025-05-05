@@ -2,12 +2,8 @@ all:
 	go run cmd/client/main.go
 
 
-testTable:
-	go run example/ui/table/main.go
-testForm:
-	go run example/ui/form/main.go
-testTab:
-	go run example/ui/tabs/main.go
+login: 
+	go run cmd/client/main.go auth login -l u -p p
 
 clean:
 	rm log/*

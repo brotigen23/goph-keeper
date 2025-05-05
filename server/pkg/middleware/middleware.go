@@ -1,16 +1,11 @@
 package middleware
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-	"io"
-	"net/http"
 	"strings"
 
-	"github.com/brotigen23/goph-keeper/server/internal/service"
 	"github.com/brotigen23/goph-keeper/server/pkg/auth"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
+	"github.com/gin-gonic/gin"
 )
 
 type Middleware struct {
@@ -18,8 +13,6 @@ type Middleware struct {
 
 	accessKey  string
 	refreshKey string
-
-	userService *service.UserService
 }
 
 func New(logger *logger.Logger, accessKey, refreshKey string) *Middleware {
@@ -30,34 +23,23 @@ func New(logger *logger.Logger, accessKey, refreshKey string) *Middleware {
 	}
 }
 
-func (m Middleware) Log(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Unable to read request body", http.StatusInternalServerError)
-			return
-		}
+func (m Middleware) Log() gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-		m.logger.Info("Request Body:", "body", string(body))
-
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		next.ServeHTTP(w, r)
-
-	})
+	}
 }
 
-func (m Middleware) Auth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
+func (m Middleware) Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			http.Error(w, ErrHeaderEmpty.Error(), http.StatusUnauthorized)
+			c.AbortWithStatusJSON(401, gin.H{"error": ErrTokenIsInvalid})
 			return
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		if token == authHeader {
-			http.Error(w, ErrTokenIsInvalid.Error(), http.StatusUnauthorized)
+			c.AbortWithStatusJSON(401, gin.H{"error": ErrTokenIsInvalid})
 			return
 		}
 		// TODO: refresh tokens if valid
@@ -66,15 +48,13 @@ func (m Middleware) Auth(next http.Handler) http.Handler {
 		case nil:
 			break
 		case auth.ErrTokenIsInvalid:
-			http.Error(w, auth.ErrTokenIsInvalid.Error(), http.StatusUnauthorized)
+			c.AbortWithStatusJSON(401, gin.H{"error": ErrTokenIsInvalid})
 			return
 		default:
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			c.AbortWithStatusJSON(401, gin.H{"error": ErrTokenIsInvalid})
 			return
 		}
-		fmt.Println(id)
-		ctx := context.WithValue(r.Context(), "id", id)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		c.Set("userID", id)
+		c.Next()
+	}
 }

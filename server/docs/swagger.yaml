@@ -1,0 +1,206 @@
+basePath: /
+definitions:
+  LoginRequest:
+    properties:
+      login:
+        example: user
+        type: string
+      password:
+        example: pass
+        type: string
+    type: object
+  RegisterRequest:
+    properties:
+      login:
+        example: user
+        type: string
+      password:
+        example: pass
+        type: string
+    type: object
+  github_com_brotigen23_goph-keeper_server_internal_dto_account.PostRequest:
+    properties:
+      login:
+        example: user
+        type: string
+      metadata:
+        example: metadata
+        type: string
+      password:
+        example: user
+        type: string
+    type: object
+  github_com_brotigen23_goph-keeper_server_internal_dto_account.PutRequest:
+    properties:
+      id:
+        example: 1
+        type: integer
+      login:
+        example: user
+        type: string
+      metadata:
+        example: metadata
+        type: string
+      password:
+        example: user
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Сервис для хранения и менеджмента пользовательских данных
+  title: GophKeeper API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя и возвращает JWT токены
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/LoginRequest'
+      responses:
+        "200":
+          description: Успешная регистрация
+        "400":
+          description: Невалидные данные
+          schema:
+            type: string
+        "409":
+          description: Пользователь уже существует
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Регистрация нового пользователя
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя и возвращает JWT токены
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterRequest'
+      responses:
+        "200":
+          description: Успешная регистрация
+        "400":
+          description: Невалидные данные
+          schema:
+            type: string
+        "409":
+          description: Пользователь уже существует
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Регистрация нового пользователя
+      tags:
+      - auth
+  /user/account:
+    get:
+      description: Возвращает выбранный аккаунт по ID
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Получить данные аккаунта
+      tags:
+      - data accounts
+    post:
+      description: Создаёт новый данные аккаунта и возвращает созданный аккаунт
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_brotigen23_goph-keeper_server_internal_dto_account.PostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная регистрация
+        "400":
+          description: Невалидные данные
+          schema:
+            type: string
+        "409":
+          description: Пользователь уже существует
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Создание нового аккаунта
+      tags:
+      - data
+  /user/accounts/:
+    put:
+      description: Возвращает список данных аккаунтов пользователя
+      parameters:
+      - description: Данные для Обновления
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_brotigen23_goph-keeper_server_internal_dto_account.PutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная регистрация
+        "400":
+          description: Невалидные данные
+          schema:
+            type: string
+        "409":
+          description: Пользователь уже существует
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить существующий аккаунт
+      tags:
+      - data
+  /user/accounts/fetch:
+    get:
+      description: Возвращает список данных аккаунтов пользователя
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Получить все аккаунты
+      tags:
+      - data
+securityDefinitions:
+  ApiKeyAuth:
+    description: Введите "Bearer <JWT>", где JWT - ваш access токен
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

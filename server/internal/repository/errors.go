@@ -1,8 +1,18 @@
 package repository
 
-import "errors"
+import (
+	"database/sql"
+	"errors"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/lib/pq"
+)
 
 var (
+	ErrNotImplement = errors.New("Not implement")
+	ErrNotFound     = errors.New("Not found")
+	ErrConflict     = errors.New("Conflict")
+
 	// Users
 	ErrUserExists   = errors.New("User already exists")
 	ErrUserNotFound = errors.New("User not found")
@@ -14,3 +24,18 @@ var (
 
 	ErrMetadataNotFound = errors.New("Metadata not found")
 )
+
+func TranslateDBError(err error) error {
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		switch pqErr.Code {
+		case pgerrcode.UniqueViolation:
+			return ErrConflict
+		}
+	}
+	return err
+}

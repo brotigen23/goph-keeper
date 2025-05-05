@@ -3,7 +3,10 @@
 ## Roadmap
 
 ### Server
-
+#### Some
+- [ ] Godoc
+- [ ] Codecov
+#### Code
 - [x] Config
 - [ ] DTO
   - [x] Account
@@ -50,7 +53,56 @@
 
 [Техническое задание](docs/specifications.md)
 
-
 ## Сервер
 - [Диаграмма классов](docs/server/Class%20Diagram.md)
 - [ER диаграмма](docs/server/ERD.md)
+
+
+# Workflow
+
+## API
+### Auth
+```http
+POST login/ HTTP/1.1
+content-type: application/json
+
+{
+    "login": <login>,
+    "password": <password>    
+}
+
+```
+
+### Accounts
+```http
+POST user/accounts HTTP/1.1
+content-type: application/json
+
+{
+    "login": <login>,
+    "password": <password>    
+}
+```
+
+```http
+GET user/accounts HTTP/1.1
+content-type: application/json
+```
+
+## Shared
+- Data
+  - Accounts
+  - Text data
+  - Binary data
+  - Cards data
+  - Metadata
+## Server
+- Handler
+  - Get shared model and map into domain model
+  - Use service
+  - Use returns of service to create response
+- Service
+  - Get domain model, do some stuff and use repo to store changes
+  - Get repo returns to create return
+- Repo
+  - C

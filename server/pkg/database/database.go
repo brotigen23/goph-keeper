@@ -1,17 +1,16 @@
 package database
 
 import (
-	"database/sql"
-
 	"github.com/brotigen23/goph-keeper/server/pkg/migration"
+	"github.com/jmoiron/sqlx"
 )
 
 type Database struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 func New(driver, dsn string) (*Database, error) {
-	db, err := sql.Open(driver, dsn)
+	db, err := sqlx.Open(driver, dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +18,7 @@ func New(driver, dsn string) (*Database, error) {
 }
 
 func (d *Database) Migrate(path string) error {
-	err := migration.Migrate(d.DB, path)
+	err := migration.Migrate(d.DB.DB, path)
 	if err != nil {
 		return err
 	}
@@ -27,7 +26,7 @@ func (d *Database) Migrate(path string) error {
 }
 
 func (d *Database) DiMigrate(path string) error {
-	err := migration.Migrate(d.DB, path)
+	err := migration.Migrate(d.DB.DB, path)
 	if err != nil {
 		return err
 	}

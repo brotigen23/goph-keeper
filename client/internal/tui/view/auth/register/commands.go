@@ -1,8 +1,6 @@
 package register
 
 import (
-	"net/http"
-
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -17,14 +15,8 @@ func (m model) SignUp() tea.Msg {
 	m.logger.Info("sign in", "login", login, "password", password)
 	response := m.client.Register(login, password)
 	// If some error
-	if err := response.Err; err != nil {
+	if err := response; err != nil {
 		m.logger.Error(err)
-	}
-
-	if response.StatusCode == http.StatusAccepted {
-		return SignUpSuccessMsg{
-			Username: login,
-		}
 	}
 
 	return response

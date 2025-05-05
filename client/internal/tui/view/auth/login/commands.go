@@ -16,14 +16,8 @@ func (m model) SignIn() tea.Msg {
 	m.logger.Info("sign in", "login", login, "password", password)
 	response := m.client.Login(login, password)
 	// If some error
-	if err := response.Err; err != nil {
+	if err := response; err != nil {
 		m.logger.Error(err)
-	}
-
-	if response.StatusCode == 202 {
-		return LoginSuccessMsg{
-			Username: login,
-		}
 	}
 
 	return response

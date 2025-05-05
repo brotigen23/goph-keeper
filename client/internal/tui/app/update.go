@@ -1,10 +1,8 @@
 package app
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/service"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/view/auth/login"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/view/auth/register"
-	"github.com/brotigen23/goph-keeper/client/internal/tui/view/manager"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -22,13 +20,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case login.LoginSuccessMsg:
-		m.dataPage = manager.New(m.logger, service.NewAccounts(m.client), globalMsg.Username)
+		//m.dataPage = manager.New(m.logger, service.NewAccounts(m.client), globalMsg.Username)
 		m.currentPage = contentPage
 		cmd := m.dataPage.Init()
 		cmds = append(cmds, cmd)
 
 	case register.SignUpSuccessMsg:
-		m.dataPage = manager.New(m.logger, service.NewAccounts(m.client), globalMsg.Username)
+		//m.dataPage = manager.New(m.logger, service.NewAccounts(m.client), globalMsg.Username)
 		m.currentPage = contentPage
 		cmd := m.dataPage.Init()
 		cmds = append(cmds, cmd)

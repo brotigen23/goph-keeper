@@ -1,7 +1,7 @@
 package datacontroller
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/app/domain"
+	"github.com/brotigen23/goph-keeper/client/internal/core/domain"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	"github.com/brotigen23/goph-keeper/client/pkg/ui/widget/table"
 	tea "github.com/charmbracelet/bubbletea"

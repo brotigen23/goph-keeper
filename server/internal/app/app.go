@@ -1,16 +1,21 @@
 package app
 
 import (
+	"github.com/brotigen23/goph-keeper/server/docs"
 	"github.com/brotigen23/goph-keeper/server/internal/config"
-	"github.com/brotigen23/goph-keeper/server/internal/handler"
+	"github.com/brotigen23/goph-keeper/server/internal/handler/auth"
+	accountHandler "github.com/brotigen23/goph-keeper/server/internal/handler/data/account"
 	"github.com/brotigen23/goph-keeper/server/internal/repository/postgres"
-	"github.com/brotigen23/goph-keeper/server/internal/service"
+	accountService "github.com/brotigen23/goph-keeper/server/internal/service/account"
+	authService "github.com/brotigen23/goph-keeper/server/internal/service/auth"
 	"github.com/brotigen23/goph-keeper/server/pkg/database"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/brotigen23/goph-keeper/server/pkg/middleware"
 	"github.com/brotigen23/goph-keeper/server/pkg/server"
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func Run() error {
@@ -20,7 +25,6 @@ func Run() error {
 		logger.Error(err)
 	}
 	logger.Info("configuration", "config", config)
-
 	//DB
 	db, err := database.New("pgx", config.GetPostgresDSN())
 	if err != nil {
@@ -28,62 +32,60 @@ func Run() error {
 		return err
 	}
 	defer db.Close()
-	err = db.Migrate("file://migration")
+	err = db.Migrate("file://db/postgres/migration")
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
 	// Repos
-	// userRepo
-	userRepo := postgres.NewUsersRepository(db.DB, logger)
-	accountsRepo := postgres.NewAccountsRepository(db.DB, logger)
-	textDataRepo := postgres.NewTextDataRepository(db.DB, logger)
-	binaryDataRepo := postgres.NewBinaryRepository(db.DB, logger)
-	cardsRepo := postgres.NewCardsRepository(db.DB, logger)
-	metadataRepo := postgres.NewMetadataRepository(db.DB, logger)
+	repoFactory := postgres.NewFactory(db.DB)
 
-	serviceAggregator := service.NewAggregator(
-		userRepo,
-		accountsRepo,
-		textDataRepo,
-		binaryDataRepo,
-		cardsRepo,
-		metadataRepo,
-	)
-	//Handler
+	// Servicies
+	userService := authService.New(repoFactory.NewUserRepository())
+	accountService := accountService.New(repoFactory.NewAccountRepository())
+	//Middleware
 	middleware := middleware.New(logger, config.JWT.AccessKey, config.JWT.RefreshKey)
-	handler := handler.New(config, serviceAggregator)
+	// Handlers
+	authHandler := auth.New(userService, config.JWT.AccessKey, config.JWT.RefreshKey)
+	accountHandler := accountHandler.New(accountService)
+	r := gin.Default()
 
-	// Router
-	router := chi.NewRouter()
-	router.Use(middleware.Log)
+	// Swagger
+	docs.SwaggerInfo.BasePath = "/"
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	router.Get("/ping", handler.Ping)
+	//! ***************************************
+	//! ***************************************
+	//! * Routes
+	//! ***************************************
+	//! ***************************************
 
-	// Wihtout auth
-	router.Group(func(r chi.Router) {
-		r.Post("/register", handler.Register)
-		r.Post("/login", handler.Login)
-	})
+	// ***************************************
+	// * Auth
+	// ***************************************
+	r.POST("/register", authHandler.Register)
+	r.POST("/login", authHandler.Login)
 
-	// With auth
-	router.Route("/user", func(r chi.Router) {
-		r.Use(middleware.Auth)
-		r.Post("/accounts", handler.AccountsDataPost)
-		r.Put("/accounts", handler.AccountsDataPut)
-		r.Get("/accounts", handler.AccountsDataGet)
-		r.Put("/metadata", handler.MetadataPut)
-		r.Get("/text", nil)
-		r.Get("/binary", nil)
-		r.Get("/cards", nil)
-	})
+	// ***************************************
+	// * Users
+	// ***************************************
+	userGroup := r.Group("/user")
+	userGroup.Use(middleware.Auth())
 
-	// Server
-	server := server.New(router, logger).Testing()
+	// ***************************************
+	// * Accounts data
+	// ***************************************
+	accountsGroup := userGroup.Group("/accounts")
+	accountsGroup.POST("/", accountHandler.Create)
+	accountsGroup.PUT("/", accountHandler.Update)
+	accountsGroup.GET("/fetch", accountHandler.Fetch)
+
+	// ***************************************
+	// * Start server
+	// ***************************************
+	server := server.New(r, logger).Testing()
 	err = server.Start()
-	if err != nil {
-		return err
-	}
+
 	return err
 }

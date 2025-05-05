@@ -3,9 +3,9 @@ package manager
 import (
 	"log"
 
-	"github.com/brotigen23/goph-keeper/client/internal/app/api/rest"
-	"github.com/brotigen23/goph-keeper/client/internal/app/domain"
-	"github.com/brotigen23/goph-keeper/client/internal/app/service"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
+	"github.com/brotigen23/goph-keeper/client/internal/core/domain"
+	"github.com/brotigen23/goph-keeper/client/internal/core/service"
 	ui "github.com/brotigen23/goph-keeper/client/internal/tui"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/style"
 	datacontroller "github.com/brotigen23/goph-keeper/client/internal/tui/view/data_controller"
@@ -19,14 +19,14 @@ type Manager struct {
 	// API
 	client *rest.Client
 
-	accountsService *service.Service
+	accountsService *service.AccountsService
 	user            string
 	tabs            tab.Tab
 
 	logger *logger.Logger
 }
 
-func New(logger *logger.Logger, accountsService *service.Service, user string) tea.Model {
+func New(logger *logger.Logger, accountsService *service.AccountsService, user string) tea.Model {
 	accountTab := datacontroller.New[domain.AccountData](logger)
 	fileTab := datacontroller.New[domain.Binary](logger)
 

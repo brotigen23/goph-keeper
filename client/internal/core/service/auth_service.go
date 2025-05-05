@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/brotigen23/goph-keeper/client/internal/core/api"
@@ -36,7 +35,6 @@ func (s AuthService) Register(login, password string) error {
 		s.logger.Error(err)
 		return err
 	}
-	os.Setenv("KEEPER_JWT", s.client.GetJWT())
 	return nil
 }
 
@@ -49,7 +47,16 @@ func (s AuthService) Login(login, password string) error {
 		s.logger.Error(err)
 		return err
 	}
-	err = os.Setenv("KEEPER_JWT", s.client.GetJWT())
-	fmt.Println(os.Getenv("KEEPER_JWT"))
+	err = saveTokenToFile(s.client.GetJWT(), ".token")
+	return nil
+}
+
+func saveTokenToFile(token, path string) error {
+	file, err := os.OpenFile(path, 0, 0600)
+	if err != nil {
+		return err
+	}
+	_, err = file.Write([]byte(token))
 	return err
+
 }

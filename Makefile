@@ -19,3 +19,11 @@ test:
 	cd server && go test ./...
 
 .PHONY: all build all docker-image-client
+
+swag:
+	~/go/bin/swag init \
+    -g ./server/cmd/server/main.go \
+	--output ./docs \
+    --parseDependency \
+    --parseInternal \
+    --parseDepth 3

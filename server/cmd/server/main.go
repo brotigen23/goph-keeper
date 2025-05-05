@@ -6,11 +6,17 @@ import (
 	"github.com/brotigen23/goph-keeper/server/internal/app"
 )
 
-// @title My API
+// @title GophKeeper API
 // @version 1.0
-// @description goph-keeper
-// @termsOfService http://example.com/terms/
-// @contact.name API Support
+// @description Сервис для хранения и менеджмента пользовательских данных
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description Введите "Bearer <JWT>", где JWT - ваш access токен
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	log.Println("start server... ")
 	err := app.Run()

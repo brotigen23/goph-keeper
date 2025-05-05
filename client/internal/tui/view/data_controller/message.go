@@ -1,6 +1,6 @@
 package datacontroller
 
-import "github.com/brotigen23/goph-keeper/client/internal/app/domain"
+import "github.com/brotigen23/goph-keeper/client/internal/core/domain"
 
 type CRUDMsg[T domain.Model] struct {
 	Action int
