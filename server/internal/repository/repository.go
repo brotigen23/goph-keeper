@@ -24,6 +24,18 @@ type UserData[T model.Model] interface {
 	GetAll(context.Context, int) ([]T, error)
 }
 
-type AccountsData interface {
+type Account interface {
 	UserData[model.Account]
+}
+
+type Text interface {
+	UserData[model.TextData]
+}
+
+type Binary interface {
+	UserData[model.BinaryData]
+}
+
+type Cards interface {
+	UserData[model.CardData]
 }

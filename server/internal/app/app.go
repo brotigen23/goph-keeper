@@ -4,10 +4,16 @@ import (
 	"github.com/brotigen23/goph-keeper/server/docs"
 	"github.com/brotigen23/goph-keeper/server/internal/config"
 	"github.com/brotigen23/goph-keeper/server/internal/handler/auth"
-	accountHandler "github.com/brotigen23/goph-keeper/server/internal/handler/data/account"
+	accountHandler "github.com/brotigen23/goph-keeper/server/internal/handler/data/accounthandler"
+	"github.com/brotigen23/goph-keeper/server/internal/handler/data/binaryhandler"
+	"github.com/brotigen23/goph-keeper/server/internal/handler/data/cardhandler"
+	"github.com/brotigen23/goph-keeper/server/internal/handler/data/texthandler"
 	"github.com/brotigen23/goph-keeper/server/internal/repository/postgres"
-	accountService "github.com/brotigen23/goph-keeper/server/internal/service/account"
+	"github.com/brotigen23/goph-keeper/server/internal/service/accountservice"
 	authService "github.com/brotigen23/goph-keeper/server/internal/service/auth"
+	"github.com/brotigen23/goph-keeper/server/internal/service/binaryservice"
+	"github.com/brotigen23/goph-keeper/server/internal/service/cardservice"
+	"github.com/brotigen23/goph-keeper/server/internal/service/textservice"
 	"github.com/brotigen23/goph-keeper/server/pkg/database"
 	"github.com/brotigen23/goph-keeper/server/pkg/logger"
 	"github.com/brotigen23/goph-keeper/server/pkg/middleware"
@@ -43,12 +49,18 @@ func Run() error {
 
 	// Servicies
 	userService := authService.New(repoFactory.NewUserRepository())
-	accountService := accountService.New(repoFactory.NewAccountRepository())
+	accountService := accountservice.New(repoFactory.NewAccountRepository())
+	textService := textservice.New(repoFactory.NewTextRepository())
+	binaryService := binaryservice.New(repoFactory.NewBinaryRepository())
+	cardsService := cardservice.New(repoFactory.NewCardsRepository())
 	//Middleware
 	middleware := middleware.New(logger, config.JWT.AccessKey, config.JWT.RefreshKey)
 	// Handlers
 	authHandler := auth.New(userService, config.JWT.AccessKey, config.JWT.RefreshKey)
 	accountHandler := accountHandler.New(accountService)
+	textHandler := texthandler.New(textService)
+	binaryHandler := binaryhandler.New(binaryService)
+	cardsHandler := cardhandler.New(cardsService)
 	r := gin.Default()
 
 	// Swagger
@@ -77,9 +89,37 @@ func Run() error {
 	// * Accounts data
 	// ***************************************
 	accountsGroup := userGroup.Group("/accounts")
-	accountsGroup.POST("/", accountHandler.Create)
-	accountsGroup.PUT("/", accountHandler.Update)
+	accountsGroup.POST("/", accountHandler.Post)
+	accountsGroup.PUT("/", accountHandler.Put)
 	accountsGroup.GET("/fetch", accountHandler.Fetch)
+	accountsGroup.DELETE("/", accountHandler.Delete)
+
+	// ***************************************
+	// * Text data
+	// ***************************************
+	textGroup := userGroup.Group("/text")
+	textGroup.POST("/", textHandler.Post)
+	textGroup.PUT("/", textHandler.Put)
+	textGroup.GET("/fetch", textHandler.Fetch)
+	textGroup.DELETE("/", textHandler.Delete)
+
+	// ***************************************
+	// * Binary data
+	// ***************************************
+	binaryGroup := userGroup.Group("/binary")
+	binaryGroup.POST("/", binaryHandler.Post)
+	binaryGroup.PUT("/", binaryHandler.Put)
+	binaryGroup.GET("/fetch", binaryHandler.Fetch)
+	binaryGroup.DELETE("/", binaryHandler.Delete)
+
+	// ***************************************
+	// * Cards data
+	// ***************************************
+	cardsGroup := userGroup.Group("/cards")
+	cardsGroup.POST("/", cardsHandler.Post)
+	cardsGroup.PUT("/", cardsHandler.Put)
+	cardsGroup.GET("/fetch", cardsHandler.Fetch)
+	cardsGroup.DELETE("/", cardsHandler.Delete)
 
 	// ***************************************
 	// * Start server

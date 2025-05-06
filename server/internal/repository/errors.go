@@ -13,6 +13,8 @@ var (
 	ErrNotFound     = errors.New("Not found")
 	ErrConflict     = errors.New("Conflict")
 
+	ErrNoUpdate = errors.New("No rows were update")
+
 	// Users
 	ErrUserExists   = errors.New("User already exists")
 	ErrUserNotFound = errors.New("User not found")

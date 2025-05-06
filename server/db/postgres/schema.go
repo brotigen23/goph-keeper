@@ -38,22 +38,64 @@ var AccountsTable = struct {
 	},
 }
 
-// Metadata table
+// Text table
 // ----------------------------------------------------------------
-type metadataColumns struct {
+type textColumns struct {
 	ID, CreatedAt, UpdatedAt string
+	UserID, Metadata         string
 	Data                     string
 }
 
-var MetadataTable = struct {
+var TextTable = struct {
 	Name    string
-	Columns metadataColumns
+	Columns textColumns
 }{
-	Name: "metadata",
-	Columns: metadataColumns{
+	Name: "text_data",
+	Columns: textColumns{
 		ID: "id", CreatedAt: "created_at", UpdatedAt: "updated_at",
+		UserID: "user_id", Metadata: "metadata",
 		Data: "data",
 	},
 }
 
-// TODO: other tables
+// Binary table
+// ----------------------------------------------------------------
+type binaryColumns struct {
+	ID, CreatedAt, UpdatedAt string
+	UserID, Metadata         string
+	Data                     string
+}
+
+var BinaryTable = struct {
+	Name    string
+	Columns binaryColumns
+}{
+	Name: "binary_data",
+	Columns: binaryColumns{
+		ID: "id", CreatedAt: "created_at", UpdatedAt: "updated_at",
+		UserID: "user_id", Metadata: "metadata",
+		Data: "data",
+	},
+}
+
+// Cards table
+// ----------------------------------------------------------------
+type cardsColumns struct {
+	ID, CreatedAt, UpdatedAt string
+	UserID, Metadata         string
+	Number, CardholderName   string
+	ExpiresAt, CVV           string
+}
+
+var CardsTable = struct {
+	Name    string
+	Columns cardsColumns
+}{
+	Name: "cards_data",
+	Columns: cardsColumns{
+		ID: "id", CreatedAt: "created_at", UpdatedAt: "updated_at",
+		UserID: "user_id", Metadata: "metadata",
+		Number: "number", CardholderName: "cardholder_name",
+		ExpiresAt: "expire", CVV: "cvv",
+	},
+}

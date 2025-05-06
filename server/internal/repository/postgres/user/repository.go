@@ -10,17 +10,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type UserRepository struct {
+type Repository struct {
 	db *sqlx.DB
 }
 
-func New(db *sqlx.DB) *UserRepository {
-	return &UserRepository{
+func New(db *sqlx.DB) repository.User {
+	return &Repository{
 		db: db,
 	}
 }
 
-func (r UserRepository) Create(ctx context.Context, user *model.User) error {
+func (r Repository) Create(ctx context.Context, user *model.User) error {
 	query := fmt.Sprintf("INSERT INTO %s(%s, %s) VALUES(:%s, :%s) RETURNING %s, %s",
 		postgres.UsersTable.Name,
 		postgres.UsersTable.Columns.Login,
@@ -40,22 +40,23 @@ func (r UserRepository) Create(ctx context.Context, user *model.User) error {
 			return repository.TranslateDBError(err)
 		}
 	}
+	user.UpdatedAt = user.CreatedAt
 	return nil
 }
 
-func (r UserRepository) Get(ctx context.Context, id int) (*model.User, error) {
+func (r Repository) Get(ctx context.Context, id int) (*model.User, error) {
 	return nil, repository.ErrNotImplement
 }
 
-func (r UserRepository) Update(ctx context.Context, user *model.User) error {
+func (r Repository) Update(ctx context.Context, user *model.User) error {
 	return repository.ErrNotImplement
 }
 
-func (r UserRepository) Delete(ctx context.Context, id int) error {
+func (r Repository) Delete(ctx context.Context, id int) error {
 	return repository.ErrNotImplement
 }
 
-func (r UserRepository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
+func (r Repository) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	ret := &model.User{}
 	query := fmt.Sprintf(`
 	SELECT %s, %s, %s, %s, %s 

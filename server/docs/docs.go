@@ -32,31 +32,25 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/LoginRequest"
+                            "$ref": "#/definitions/Login.PostRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешная регистрация"
+                        "description": "Успешный вход"
                     },
                     "400": {
                         "description": "Невалидные данные",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": {}
                     },
                     "409": {
                         "description": "Пользователь уже существует",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": {}
                     },
                     "500": {
                         "description": "Ошибка сервера",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": {}
                     }
                 }
             }
@@ -78,7 +72,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/RegisterRequest"
+                            "$ref": "#/definitions/Register.PostRequest"
                         }
                     }
                 ],
@@ -108,50 +102,34 @@ const docTemplate = `{
             }
         },
         "/user/account": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Возвращает выбранный аккаунт по ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "data accounts"
-                ],
-                "summary": "Получить данные аккаунта",
-                "responses": {}
-            },
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Создаёт новый данные аккаунта и возвращает созданный аккаунт",
+                "description": "Создает новый аккаунт",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "data"
+                    "accounts"
                 ],
-                "summary": "Создание нового аккаунта",
+                "summary": "Создать новый аккаунт",
                 "parameters": [
                     {
-                        "description": "Данные для регистрации",
+                        "description": "Данные для сохранения",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_brotigen23_goph-keeper_server_internal_dto_account.PostRequest"
+                            "$ref": "#/definitions/Account.PostRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешная регистрация"
+                        "description": "Успешное создание"
                     },
                     "400": {
                         "description": "Невалидные данные",
@@ -159,14 +137,20 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "409": {
-                        "description": "Пользователь уже существует",
+                        "description": "Конфликт создания",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Ошибка сервера",
+                        "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }
@@ -181,28 +165,27 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Возвращает список данных аккаунтов пользователя",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "data"
+                    "accounts"
                 ],
                 "summary": "Обновить существующий аккаунт",
                 "parameters": [
                     {
-                        "description": "Данные для Обновления",
+                        "description": "Данные для обновления",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_brotigen23_goph-keeper_server_internal_dto_account.PutRequest"
+                            "$ref": "#/definitions/Account.PutRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешная регистрация"
+                        "description": "Успешное обновление"
                     },
                     "400": {
                         "description": "Невалидные данные",
@@ -210,14 +193,63 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
-                    "409": {
-                        "description": "Пользователь уже существует",
+                    "401": {
+                        "description": "Ошибка аутентификации",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Ошибка сервера",
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет аккаунт с входящим ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Удалить существующий аккаунт",
+                "parameters": [
+                    {
+                        "description": "Данные для с id записью",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Account.DeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное удаление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }
@@ -237,41 +269,605 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "data"
+                    "accounts"
                 ],
                 "summary": "Получить все аккаунты",
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "Успешное выполнение"
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/binary": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создает бинарные данные",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "binary"
+                ],
+                "summary": "Создать бинарные данные",
+                "parameters": [
+                    {
+                        "description": "Данные для сохранения",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_brotigen23_goph-keeper_server_internal_dto_binarydto.PostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное создание"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Конфликт создания",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/binary/": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "binary"
+                ],
+                "summary": "Обновить существующую бинарную запись",
+                "parameters": [
+                    {
+                        "description": "Данные для Обновления",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_brotigen23_goph-keeper_server_internal_dto_binarydto.PutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное обновление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет запись с входящим ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "binary"
+                ],
+                "summary": "Удалить существующую запись",
+                "parameters": [
+                    {
+                        "description": "Данные с id записью",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Binary.DeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное удаление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/binary/fetch": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список бинарных данных пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "binary"
+                ],
+                "summary": "Получить все бинарные данные",
+                "responses": {
+                    "200": {
+                        "description": "Успешное выполнение"
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/cards": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Создать данные банковской карты",
+                "parameters": [
+                    {
+                        "description": "Данные для сохранения",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Card.PostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное создание"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Конфликт создания",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/cards/": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Обновить существующую карту",
+                "parameters": [
+                    {
+                        "description": "Данные для Обновления",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Card.PutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное обновление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет запись с входящим ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Удалить существующую запись",
+                "parameters": [
+                    {
+                        "description": "Данные с id записью",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Card.DeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное удаление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/cards/fetch": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Получить все бинарные данные",
+                "responses": {
+                    "200": {
+                        "description": "Успешное выполнение"
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/text": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "text"
+                ],
+                "summary": "Создать новую запись",
+                "parameters": [
+                    {
+                        "description": "Данные для сохранения",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Text.PostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное создание"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Конфликт создания",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/text/": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "text"
+                ],
+                "summary": "Обновить существующую запись",
+                "parameters": [
+                    {
+                        "description": "Данные для обновления",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Text.PutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное обновление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "text"
+                ],
+                "summary": "Удалить существующую запись",
+                "parameters": [
+                    {
+                        "description": "Данные для обновления",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Text.DeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное удаление"
+                    },
+                    "400": {
+                        "description": "Невалидные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/text/fetch": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "text"
+                ],
+                "summary": "Получить все данные",
+                "responses": {
+                    "200": {
+                        "description": "Успешное выполнение"
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
-        "LoginRequest": {
+        "Account.DeleteRequest": {
             "type": "object",
             "properties": {
-                "login": {
-                    "type": "string",
-                    "example": "user"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "pass"
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
-        "RegisterRequest": {
-            "type": "object",
-            "properties": {
-                "login": {
-                    "type": "string",
-                    "example": "user"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "pass"
-                }
-            }
-        },
-        "github_com_brotigen23_goph-keeper_server_internal_dto_account.PostRequest": {
+        "Account.PostRequest": {
             "type": "object",
             "properties": {
                 "login": {
@@ -288,7 +884,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_brotigen23_goph-keeper_server_internal_dto_account.PutRequest": {
+        "Account.PutRequest": {
             "type": "object",
             "properties": {
                 "id": {
@@ -308,6 +904,149 @@ const docTemplate = `{
                     "example": "user"
                 }
             }
+        },
+        "Binary.DeleteRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "Card.DeleteRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "Card.PostRequest": {
+            "type": "object",
+            "properties": {
+                "cardholder_name": {
+                    "type": "string",
+                    "example": "IVAN IVANOV"
+                },
+                "cvv": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "expire": {
+                    "type": "string",
+                    "example": "29.01.2033"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "metadata"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "1234 5678 9123 456"
+                }
+            }
+        },
+        "Card.PutRequest": {
+            "type": "object",
+            "properties": {
+                "cardholder_name": {
+                    "type": "string",
+                    "example": "IVAN IVANOV"
+                },
+                "cvv": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "expire": {
+                    "type": "string",
+                    "example": "29.01.2033"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "metadata"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "1234 5678 9123 456"
+                }
+            }
+        },
+        "Login.PostRequest": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "pass"
+                }
+            }
+        },
+        "Register.PostRequest": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "pass"
+                }
+            }
+        },
+        "Text.DeleteRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "Text.PostRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "metadata"
+                }
+            }
+        },
+        "Text.PutRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "metadata"
+                }
+            }
+        },
+        "github_com_brotigen23_goph-keeper_server_internal_dto_binarydto.PostRequest": {
+            "type": "object"
+        },
+        "github_com_brotigen23_goph-keeper_server_internal_dto_binarydto.PutRequest": {
+            "type": "object"
         }
     },
     "securityDefinitions": {

@@ -17,7 +17,7 @@ type Repository struct {
 	db *sqlx.DB
 }
 
-func New(db *sqlx.DB) repository.AccountsData {
+func New(db *sqlx.DB) repository.Account {
 	return &Repository{
 		db: db,
 	}
@@ -50,16 +50,43 @@ func (r *Repository) Create(ctx context.Context, item *model.Account) error {
 			return repository.TranslateDBError(err)
 		}
 	}
+	item.UpdatedAt = item.CreatedAt
 	return nil
 }
 
 func (r *Repository) Get(ctx context.Context, id int) (*model.Account, error) {
-	return nil, repository.ErrNotImplement
+	ret := &model.Account{}
+	ret.ID = id
+	query := fmt.Sprintf("SELECT %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s = :%s",
+		postgres.AccountsTable.Columns.ID,
+		postgres.AccountsTable.Columns.Login,
+		postgres.AccountsTable.Columns.Password,
+		postgres.AccountsTable.Columns.UserID,
+		postgres.AccountsTable.Columns.Metadata,
+		postgres.AccountsTable.Columns.CreatedAt,
+		postgres.AccountsTable.Columns.UpdatedAt,
+
+		postgres.AccountsTable.Name,
+
+		postgres.AccountsTable.Columns.ID,
+		postgres.AccountsTable.Columns.ID,
+	)
+	rows, err := r.db.NamedQueryContext(ctx, query, ret)
+	if err != nil {
+		return nil, repository.TranslateDBError(err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if err := rows.StructScan(ret); err != nil {
+			return nil, repository.TranslateDBError(err)
+		}
+	}
+	return ret, nil
 }
 
 func (r *Repository) Update(ctx context.Context, item *model.Account) error {
 	// Igrones created_at, updated_at and user_id
-
 	query := fmt.Sprintf("UPDATE %s SET %s = :%s, %s = :%s, %s = :%s WHERE %s = :%s",
 		postgres.AccountsTable.Name,
 		postgres.AccountsTable.Columns.Login,
@@ -71,15 +98,38 @@ func (r *Repository) Update(ctx context.Context, item *model.Account) error {
 		postgres.AccountsTable.Columns.ID,
 		postgres.AccountsTable.Columns.ID,
 	)
-	_, err := r.db.NamedExecContext(ctx, query, item)
+	result, err := r.db.NamedExecContext(ctx, query, item)
 	if err != nil {
 		return err
+	}
+	ra, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if ra < 1 {
+		return repository.ErrNoUpdate
 	}
 	return nil
 }
 
 func (r *Repository) Delete(ctx context.Context, id int) error {
-	return repository.ErrNotImplement
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s = $1",
+		postgres.AccountsTable.Name,
+		postgres.AccountsTable.Columns.ID,
+	)
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected < 1 {
+		return repository.ErrNotFound
+	}
+	return nil
 }
 
 func (r *Repository) GetAll(ctx context.Context, userID int) ([]model.Account, error) {

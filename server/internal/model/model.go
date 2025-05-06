@@ -37,24 +37,24 @@ type Account struct {
 type TextData struct {
 	Base
 	BaseData
-	Data string
+	Data string `db:"data"`
 }
 
 // Stores the user's binary data
 type BinaryData struct {
 	Base
 	BaseData
-	Data []byte
+	Data []byte `db:"data"`
 }
 
 // Stores the user's bank card information
 type CardData struct {
 	Base
 	BaseData
-	Number         string
-	CardholderName string
-	Expire         time.Time
-	CVV            string
+	Number         string    `db:"number"`
+	CardholderName string    `db:"cardholder_name"`
+	Expire         time.Time `db:"expire"`
+	CVV            string    `db:"cvv"`
 }
 
 func (u User) GetID() int       { return u.ID }
