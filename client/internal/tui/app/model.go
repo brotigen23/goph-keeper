@@ -8,7 +8,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -22,7 +22,7 @@ func Run() error {
 		"OS:", runtime.GOOS,
 		"Arch:", runtime.GOARCH,
 		"TERM:", os.Getenv("TERM"))
-	client := rest.New("http://localhost:8080")
+	client := api.New("http://localhost:8080")
 	// Main
 	rootModel := New(logger, client)
 
@@ -48,7 +48,7 @@ type model struct {
 	dataPage tea.Model
 
 	logger *logger.Logger
-	client *rest.Client
+	client *api.RESTClient
 
 	windowSize struct {
 		width  int
@@ -56,7 +56,7 @@ type model struct {
 	}
 }
 
-func New(logger *logger.Logger, client *rest.Client) *model {
+func New(logger *logger.Logger, client *api.RESTClient) *model {
 	return &model{
 		currentPage: loginPage,
 

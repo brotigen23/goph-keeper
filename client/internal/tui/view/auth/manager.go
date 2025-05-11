@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/style"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/util"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/view/auth/login"
@@ -23,7 +23,7 @@ type AuthManager struct {
 	tabs tab.Tab
 }
 
-func NewManager(logger *logger.Logger, client *rest.Client) tea.Model {
+func NewManager(logger *logger.Logger, client *api.RESTClient) tea.Model {
 	log := login.New(logger, client)
 	reg := register.New(logger, client)
 

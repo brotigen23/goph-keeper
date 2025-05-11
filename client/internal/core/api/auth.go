@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"encoding/json"
@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/brotigen23/goph-keeper/client/internal/core/dto"
+	"github.com/brotigen23/goph-keeper/client/internal/core/dto/auth/logindto"
 	"github.com/go-resty/resty/v2"
 )
 
 const (
-	register = iota
+	Register = iota
 	Login
 )
 
@@ -20,8 +20,8 @@ const (
 	loginPath    = "/login"
 )
 
-func (c *Client) auth(w int, l, p string) error {
-	credentials := dto.Login{Login: l, Password: p}
+func (c *RESTClient) auth(w int, l, p string) error {
+	credentials := logindto.PostRequest{Login: l, Password: p}
 	requestBody, err := json.Marshal(credentials)
 	var response *resty.Response
 	if err != nil {
@@ -30,7 +30,7 @@ func (c *Client) auth(w int, l, p string) error {
 	request := c.client.R()
 	request.Body = requestBody
 	switch w {
-	case register:
+	case Register:
 		response, err = request.Post(registerPath)
 	case Login:
 		response, err = request.Post(loginPath)
@@ -47,17 +47,18 @@ func (c *Client) auth(w int, l, p string) error {
 	return nil
 }
 
-func (c *Client) Register(login, password string) error {
-	return c.auth(register, login, password)
+func (c *RESTClient) Register(login, password string) error {
+	return c.auth(Register, login, password)
 }
 
-func (c *Client) Login(login, password string) error {
+func (c *RESTClient) Login(login, password string) error {
 	return c.auth(Login, login, password)
 }
 
-func (c Client) GetJWT() string {
+func (c RESTClient) GetJWT() string {
 	return c.jwt
 }
-func (c *Client) SetJWT(jwt string) {
+
+func (c *RESTClient) SetJWT(jwt string) {
 	c.jwt = jwt
 }

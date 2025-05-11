@@ -51,10 +51,13 @@ func getAccounts() string {
 	var ret string
 	for i := range accounts {
 		ret += fmt.Sprintf(
-			"[%d] login: %s, password: %s\n",
+			"[%d] login: %s, password: %s, created_at: %s, updated_at: %s\n",
 			accounts[i].ID,
 			accounts[i].Login,
-			accounts[i].Password)
+			accounts[i].Password,
+			accounts[i].CreatedAt,
+			accounts[i].UpdatedAt,
+		)
 	}
 	return ret
 }

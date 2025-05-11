@@ -6,6 +6,25 @@ definitions:
         example: 1
         type: integer
     type: object
+  Account.Get.Response:
+    properties:
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      login:
+        example: user
+        type: string
+      metadata:
+        example: metadata
+        type: string
+      password:
+        example: user
+        type: string
+      updated_at:
+        type: string
+    type: object
   Account.PostRequest:
     properties:
       login:
@@ -54,13 +73,13 @@ definitions:
         example: "123"
         type: string
       expire:
-        example: 29.01.2033
+        example: "2033-01-01T00:00:00.000000Z"
         type: string
       metadata:
         example: metadata
         type: string
       number:
-        example: 1234 5678 9123 456
+        example: "123456789123456"
         type: string
     type: object
   Card.PutRequest:
@@ -72,7 +91,7 @@ definitions:
         example: "123"
         type: string
       expire:
-        example: 29.01.2033
+        example: "2033-01-01T00:00:00.000000Z"
         type: string
       id:
         example: 1
@@ -81,7 +100,7 @@ definitions:
         example: metadata
         type: string
       number:
-        example: 1234 5678 9123 456
+        example: "123456789123456"
         type: string
     type: object
   Login.PostRequest:
@@ -303,6 +322,10 @@ paths:
       responses:
         "200":
           description: Успешное выполнение
+          schema:
+            items:
+              $ref: '#/definitions/Account.Get.Response'
+            type: array
         "401":
           description: Ошибка аутентификации
           schema:
@@ -318,7 +341,6 @@ paths:
       - accounts
   /user/binary:
     post:
-      description: Создает бинарные данные
       parameters:
       - description: Данные для сохранения
         in: body

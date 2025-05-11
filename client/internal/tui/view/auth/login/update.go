@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -21,7 +21,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, m.SignIn)
 			}
 		}
-	case rest.Response:
+	case api.Response:
 
 	}
 	cmds = append(cmds, m.updateInputs(msg))

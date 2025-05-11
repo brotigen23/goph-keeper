@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,12 +12,12 @@ type model struct {
 	inputs       []textinput.Model
 	inputFocus   int
 	serverStatus error
-	client       *rest.Client
+	client       *api.RESTClient
 
 	logger *logger.Logger
 }
 
-func New(logger *logger.Logger, client *rest.Client) tea.Model {
+func New(logger *logger.Logger, client *api.RESTClient) tea.Model {
 	inputs := make([]textinput.Model, 2)
 
 	loginInput := textinput.New()

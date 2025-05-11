@@ -10,10 +10,10 @@ import (
 )
 
 var accountsService *service.AccountsService
-var client api.APIClient
+var client *api.RESTClient
 
 // Need to init servicies with that client
-func Init(c api.APIClient) {
+func Init(c *api.RESTClient) {
 	client = c
 }
 

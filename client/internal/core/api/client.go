@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"github.com/go-resty/resty/v2"
@@ -10,21 +10,21 @@ type Response struct {
 	Err        error
 }
 
-type Client struct {
+type RESTClient struct {
 	client *resty.Client
 	jwt    string
 }
 
-func New(baseURL string) *Client {
+func New(baseURL string) *RESTClient {
 	client := resty.New().
 		SetBaseURL(baseURL)
 
-	return &Client{
+	return &RESTClient{
 		client: client,
 	}
 }
 
-func (c Client) Ping() Response {
+func (c RESTClient) Ping() Response {
 	response, err := c.client.R().Get("/ping")
 	return Response{
 		Body:       response.Body(),

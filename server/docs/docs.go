@@ -274,7 +274,13 @@ const docTemplate = `{
                 "summary": "Получить все аккаунты",
                 "responses": {
                     "200": {
-                        "description": "Успешное выполнение"
+                        "description": "Успешное выполнение",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Account.Get.Response"
+                            }
+                        }
                     },
                     "401": {
                         "description": "Ошибка аутентификации",
@@ -298,7 +304,6 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Создает бинарные данные",
                 "produces": [
                     "application/json"
                 ],
@@ -867,6 +872,33 @@ const docTemplate = `{
                 }
             }
         },
+        "Account.Get.Response": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "login": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "metadata"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "Account.PostRequest": {
             "type": "object",
             "properties": {
@@ -936,7 +968,7 @@ const docTemplate = `{
                 },
                 "expire": {
                     "type": "string",
-                    "example": "29.01.2033"
+                    "example": "2033-01-01T00:00:00.000000Z"
                 },
                 "metadata": {
                     "type": "string",
@@ -944,7 +976,7 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "string",
-                    "example": "1234 5678 9123 456"
+                    "example": "123456789123456"
                 }
             }
         },
@@ -961,7 +993,7 @@ const docTemplate = `{
                 },
                 "expire": {
                     "type": "string",
-                    "example": "29.01.2033"
+                    "example": "2033-01-01T00:00:00.000000Z"
                 },
                 "id": {
                     "type": "integer",
@@ -973,7 +1005,7 @@ const docTemplate = `{
                 },
                 "number": {
                     "type": "string",
-                    "example": "1234 5678 9123 456"
+                    "example": "123456789123456"
                 }
             }
         },

@@ -2,7 +2,7 @@ package accounthandler
 
 import (
 	"context"
-	"log"
+	"errors"
 	"net/http"
 
 	"github.com/brotigen23/goph-keeper/server/internal/dto"
@@ -51,30 +51,31 @@ func (h *Handler) Post(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, errReponse)
 		return
 	}
-	var account accountdto.PostRequest
+	var request accountdto.PostRequest
 
-	err := c.ShouldBindJSON(&account)
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		errReponse.Msg = err.Error()
 		c.JSON(http.StatusUnauthorized, errReponse)
 		return
 	}
-	toSave := &model.Account{
+	account := &model.Account{
 		BaseData: model.BaseData{
 			UserID:   userID,
-			Metadata: account.Metadata,
+			Metadata: request.Metadata,
 		},
-		Login:    account.Login,
-		Password: account.Password}
+		Login:    request.Login,
+		Password: request.Password}
 
-	err = h.service.Create(context.Background(), toSave)
+	err = h.service.Create(context.Background(), account)
 	if err != nil {
 		errReponse.Msg = err.Error()
 		c.JSON(http.StatusUnauthorized, errReponse)
 		return
 	}
-
-	c.JSON(http.StatusOK, toSave)
+	response := accountdto.PostResponse{}
+	response.Map(*account)
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) Get(c *gin.Context) {
@@ -86,7 +87,7 @@ func (h *Handler) Get(c *gin.Context) {
 // @Tags accounts
 // @Security ApiKeyAuth
 // @Produce  json
-// @Success 	200 			{object} 	nil "Успешное выполнение"
+// @Success 	200 			{object} 	[]accountdto.GetResponse "Успешное выполнение"
 // @Failure 	401 			{object} 	string "Ошибка аутентификации"
 // @Failure 	500 			{object} 	string "Внутренняя ошибка сервера"
 // @Router /user/accounts/fetch [get]
@@ -112,8 +113,14 @@ func (h *Handler) Fetch(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, responseErr)
 		return
 	}
-
-	c.JSON(http.StatusOK, data)
+	response := []accountdto.GetResponse{}
+	// User mapper
+	for _, account := range data {
+		item := accountdto.GetResponse{}
+		item.Map(account)
+		response = append(response, item)
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // UpdateAccount godoc
@@ -122,7 +129,7 @@ func (h *Handler) Fetch(c *gin.Context) {
 // @Security 	ApiKeyAuth
 // @Produce  	json
 // @Param 		input body accountdto.PutRequest true "Данные для обновления"
-// @Success 	200 			{object} 	nil "Успешное обновление"
+// @Success 	200 			{object} 	accountdto.PutResponse "Успешное обновление"
 // @Failure 	400 			{object} 	string "Невалидные данные"
 // @Failure 	401 			{object} 	string "Ошибка аутентификации"
 // @Failure 	500 			{object} 	string "Внутренняя ошибка сервера"
@@ -139,31 +146,34 @@ func (h *Handler) Put(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "invalid userID type")
 		return
 	}
-	var account accountdto.PutRequest
+	var request accountdto.PutRequest
 
-	err := c.ShouldBindJSON(&account)
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	toSave := &model.Account{
+	// TODO: mapper
+	data := &model.Account{
 		Base: model.Base{
-			ID: account.ID,
+			ID: request.ID,
 		},
 		BaseData: model.BaseData{
 			UserID:   userID,
-			Metadata: account.Metadata,
+			Metadata: request.Metadata,
 		},
-		Login:    account.Login,
-		Password: account.Password}
+		Login:    request.Login,
+		Password: request.Password,
+	}
 
-	err = h.service.Update(context.Background(), toSave)
+	err = h.service.Update(context.Background(), data)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	c.JSON(http.StatusOK, toSave)
+	response := accountdto.PutResponse{}
+	response.Map(*data)
+	c.JSON(http.StatusOK, data)
 }
 
 // Delete godoc
@@ -173,26 +183,19 @@ func (h *Handler) Put(c *gin.Context) {
 // @Security 	ApiKeyAuth
 // @Produce  	json
 // @Param 		input body accountdto.DeleteRequest true "Данные для с id записью"
-// @Success 	200 			{object} 	nil "Успешное удаление"
+// @Success 	200 			{object} 	string "Успешное удаление"
 // @Failure 	400 			{object} 	string "Невалидные данные"
 // @Failure 	401 			{object} 	string "Ошибка аутентификации"
 // @Failure 	500 			{object} 	string "Внутренняя ошибка сервера"
 // @Router 		/user/accounts/ [delete]
 func (h *Handler) Delete(c *gin.Context) {
-	id, exists := c.Get("userID")
-	if !exists {
-		c.String(http.StatusUnauthorized, "Auth error")
-		return
+	userID, err := getUserID(c)
+	if err != nil {
+		c.String(http.StatusUnauthorized, err.Error())
 	}
 
-	userID, ok := id.(int)
-	if !ok {
-		c.String(http.StatusInternalServerError, "invalid userID type")
-		return
-	}
 	var request accountdto.DeleteRequest
-	log.Println(userID)
-	err := c.ShouldBindJSON(&request)
+	err = c.ShouldBindJSON(&request)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -205,4 +208,17 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "Deleted")
+}
+
+func getUserID(c *gin.Context) (int, error) {
+	id, exists := c.Get("userID")
+	if !exists {
+		return 0, errors.New("Auth error")
+	}
+
+	userID, ok := id.(int)
+	if !ok {
+		return 0, errors.New("Auth error")
+	}
+	return userID, nil
 }

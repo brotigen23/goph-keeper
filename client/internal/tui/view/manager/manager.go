@@ -3,7 +3,7 @@ package manager
 import (
 	"log"
 
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/rest"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
 	"github.com/brotigen23/goph-keeper/client/internal/core/domain"
 	"github.com/brotigen23/goph-keeper/client/internal/core/service"
 	ui "github.com/brotigen23/goph-keeper/client/internal/tui"
@@ -17,7 +17,7 @@ import (
 
 type Manager struct {
 	// API
-	client *rest.Client
+	client *api.RESTClient
 
 	accountsService *service.AccountsService
 	user            string

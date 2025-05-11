@@ -1,17 +1,18 @@
 package accountdto
 
 import (
-	"github.com/brotigen23/goph-keeper/server/internal/dto"
+	"github.com/brotigen23/goph-keeper/client/internal/core/domain"
+	"github.com/brotigen23/goph-keeper/client/internal/core/dto"
 )
 
 // ***************************
 // * Model
 // ***************************
 type Account struct {
-	Login    string `json:"login" example:"user"`
-	Password string `json:"password" example:"user"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
 
-	Metadata string `json:"metadata" example:"metadata"`
+	Metadata string `json:"metadata"`
 }
 
 // ***************************
@@ -21,16 +22,37 @@ type PostRequest struct {
 	Account
 } //@name Account.PostRequest
 
+func (r *PostRequest) Map(account domain.Account) {
+	r.Account = Account{
+		Login:    account.Login,
+		Password: account.Password,
+		Metadata: account.Metadata,
+	}
+}
+
 type PostResponse struct {
 	dto.BaseDTO
 	Account
 } //@name Account.PostResponse
 
+func (r *PostResponse) Map(account domain.Account) {
+	r.BaseDTO = dto.BaseDTO{
+		ID:        account.ID,
+		CreatedAt: account.CreatedAt,
+		UpdatedAt: account.UpdatedAt,
+	}
+	r.Account = Account{
+		Login:    account.Login,
+		Password: account.Password,
+		Metadata: account.Metadata,
+	}
+}
+
 // ***************************
 // * PUT
 // ***************************
 type PutRequest struct {
-	ID int `json:"id" example:"1"`
+	ID int `json:"id"`
 	Account
 } //@name Account.PutRequest
 
@@ -51,7 +73,7 @@ type GetResponse struct {
 // * DELETE
 // ***************************
 type DeleteRequest struct {
-	ID int `json:"id" example:"1"`
+	ID int `json:"id"`
 } //@name Account.DeleteRequest
 
 type DeleleResponse struct {

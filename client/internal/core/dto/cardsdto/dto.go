@@ -1,15 +1,19 @@
-package accountdto
+package cardsdto
 
 import (
-	"github.com/brotigen23/goph-keeper/server/internal/dto"
+	"time"
+
+	"github.com/brotigen23/goph-keeper/client/internal/core/dto"
 )
 
 // ***************************
 // * Model
 // ***************************
-type Account struct {
-	Login    string `json:"login" example:"user"`
-	Password string `json:"password" example:"user"`
+type DTO struct {
+	Number         string    `json:"number" example:"123456789123456"`
+	CardholderName string    `json:"cardholder_name" example:"IVAN IVANOV"`
+	Exipre         time.Time `json:"expire" example:"2033-01-01T00:00:00.000000Z"`
+	CVV            string    `json:"cvv" example:"123"`
 
 	Metadata string `json:"metadata" example:"metadata"`
 }
@@ -18,41 +22,41 @@ type Account struct {
 // * POST
 // ***************************
 type PostRequest struct {
-	Account
-} //@name Account.PostRequest
+	DTO
+} //@name Card.PostRequest
 
 type PostResponse struct {
 	dto.BaseDTO
-	Account
-} //@name Account.PostResponse
+	DTO
+} //@name Card.PostResponse
 
 // ***************************
 // * PUT
 // ***************************
 type PutRequest struct {
 	ID int `json:"id" example:"1"`
-	Account
-} //@name Account.PutRequest
+	DTO
+} //@name Card.PutRequest
 
 type PutResponse struct {
 	dto.BaseDTO
-	Account
-} //@name Account.PutResponse
+	DTO
+} //@name Card.PutResponse
 
 // ***************************
 // * GET
 // ***************************
 type GetResponse struct {
 	dto.BaseDTO
-	Account
-} //@name Account.Get.Response
+	DTO
+} //@name Card.GetResponse
 
 // ***************************
 // * DELETE
 // ***************************
 type DeleteRequest struct {
 	ID int `json:"id" example:"1"`
-} //@name Account.DeleteRequest
+} //@name Card.DeleteRequest
 
 type DeleleResponse struct {
-} //@name Account.DeleteResponse
+} //@name Card.DeleteResponse

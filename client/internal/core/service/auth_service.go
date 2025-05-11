@@ -8,12 +8,12 @@ import (
 )
 
 type AuthService struct {
-	client api.APIClient
+	client *api.RESTClient
 
 	logger *logger.Logger
 }
 
-func NewAuth(client api.APIClient) *AuthService {
+func NewAuth(client *api.RESTClient) *AuthService {
 	return &AuthService{
 		client: client,
 
