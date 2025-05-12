@@ -8,7 +8,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -22,7 +22,7 @@ func Run() error {
 		"OS:", runtime.GOOS,
 		"Arch:", runtime.GOARCH,
 		"TERM:", os.Getenv("TERM"))
-	client := api.New("http://localhost:8080")
+	client := api.New("http://localhost:8080", "")
 	// Main
 	rootModel := New(logger, client)
 

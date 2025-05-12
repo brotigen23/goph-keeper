@@ -101,7 +101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/account": {
+        "/user/accounts": {
             "post": {
                 "security": [
                     {
@@ -185,7 +185,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешное обновление"
+                        "description": "Успешное обновление",
+                        "schema": {
+                            "$ref": "#/definitions/Account.PutResponse"
+                        }
                     },
                     "400": {
                         "description": "Невалидные данные",
@@ -234,7 +237,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешное удаление"
+                        "description": "Успешное удаление",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     "400": {
                         "description": "Невалидные данные",
@@ -934,6 +940,33 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "user"
+                }
+            }
+        },
+        "Account.PutResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "login": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "metadata"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

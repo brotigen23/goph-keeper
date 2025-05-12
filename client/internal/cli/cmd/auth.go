@@ -8,7 +8,7 @@ import (
 var (
 	login       string
 	password    string
-	authService *service.AuthService
+	authService *service.Auth
 )
 
 var authCmd = &cobra.Command{

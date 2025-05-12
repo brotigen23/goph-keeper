@@ -52,6 +52,25 @@ definitions:
         example: user
         type: string
     type: object
+  Account.PutResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      login:
+        example: user
+        type: string
+      metadata:
+        example: metadata
+        type: string
+      password:
+        example: user
+        type: string
+      updated_at:
+        type: string
+    type: object
   Binary.DeleteRequest:
     properties:
       id:
@@ -216,7 +235,7 @@ paths:
       summary: Регистрация нового пользователя
       tags:
       - auth
-  /user/account:
+  /user/accounts:
     post:
       description: Создает новый аккаунт
       parameters:
@@ -267,6 +286,8 @@ paths:
       responses:
         "200":
           description: Успешное удаление
+          schema:
+            type: string
         "400":
           description: Невалидные данные
           schema:
@@ -297,6 +318,8 @@ paths:
       responses:
         "200":
           description: Успешное обновление
+          schema:
+            $ref: '#/definitions/Account.PutResponse'
         "400":
           description: Невалидные данные
           schema:

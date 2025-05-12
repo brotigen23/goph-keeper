@@ -35,7 +35,7 @@ func New(service service.AccountService) *Handler {
 // @Failure 	401 			{object} 	string "Ошибка аутентификации"
 // @Failure 	409 			{object} 	string "Конфликт создания"
 // @Failure 	500 			{object} 	string "Внутренняя ошибка сервера"
-// @Router 		/user/account	[post]
+// @Router 		/user/accounts	[post]
 func (h *Handler) Post(c *gin.Context) {
 	errReponse := dto.ResponseError{}
 	id, exists := c.Get("userID")

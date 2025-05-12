@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -26,6 +27,12 @@ var loginCmd = &cobra.Command{
 			return
 		}
 		fmt.Printf("User %s success login\n", login)
+
+		err = os.WriteFile("./.cred", []byte(client.GetJWT()), 0666)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	},
 }
 

@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

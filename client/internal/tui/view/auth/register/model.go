@@ -1,7 +1,7 @@
 package register
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api"
 	"github.com/brotigen23/goph-keeper/client/pkg/logger"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"

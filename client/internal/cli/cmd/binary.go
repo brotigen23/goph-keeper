@@ -9,26 +9,27 @@ import (
 )
 
 var (
-	method          string
-	accountID       int
-	accountLogin    string
-	accountPassword string
-	accountMetadata string
+	binaryMethod   string
+	binaryID       int
+	binaryPath     string
+	binaryMetadata string
+
+	// Dir path
 )
 
-var accountsCmd = &cobra.Command{
-	Use:   "accounts",
+var binaryCmd = &cobra.Command{
+	Use:   "binary",
 	Short: "Authenticate with Keeper",
 	Run: func(cmd *cobra.Command, args []string) {
 		switch method {
 		case "post":
-			fmt.Println(postAccount())
+			fmt.Println(postBinary())
 		case "put":
-			fmt.Println(putAccount())
+			fmt.Println(putBinary())
 		case "get":
-			fmt.Println(getAccounts())
+			fmt.Println(getBinary())
 		case "delete":
-			fmt.Println(deleteAccount())
+			fmt.Println(deleteBinary())
 		default:
 			fmt.Println("Method is not allowed")
 			fmt.Println("Use with post, put, get or delete")
@@ -37,16 +38,15 @@ var accountsCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(accountsCmd)
+	rootCmd.AddCommand(binaryCmd)
 
-	accountsCmd.Flags().StringVarP(&method, "method", "m", "get", "method")
-	accountsCmd.Flags().IntVarP(&accountID, "id", "i", 0, "id")
-	accountsCmd.Flags().StringVarP(&accountLogin, "login", "l", "", "login")
-	accountsCmd.Flags().StringVarP(&accountPassword, "password", "p", "", "password")
-	accountsCmd.Flags().StringVarP(&accountMetadata, "metadata", "d", "", "metadata")
+	binaryCmd.Flags().StringVarP(&binaryMethod, "method", "m", "get", "method")
+	binaryCmd.Flags().IntVarP(&binaryID, "id", "i", 0, "id")
+	binaryCmd.Flags().StringVarP(&binaryPath, "path", "p", "", "path")
+	binaryCmd.Flags().StringVarP(&binaryMetadata, "metadata", "d", "", "metadata")
 }
 
-func getAccounts() string {
+func getBinary() string {
 	accounts, err := accountsService.Fetch()
 	if err != nil {
 		return err.Error()
@@ -55,11 +55,11 @@ func getAccounts() string {
 	for i := range accounts {
 		ret += accountToString(accounts[i])
 	}
-	ret += "Accounts:\n"
+	ret += "Binary data:\n"
 	return ret
 }
 
-func postAccount() string {
+func postBinary() string {
 	var ret string
 	request := accountdto.PostRequest{}
 	request.Login = accountLogin
@@ -74,7 +74,7 @@ func postAccount() string {
 	return ret
 }
 
-func putAccount() string {
+func putBinary() string {
 	var ret string
 
 	request := accountdto.PutRequest{}
@@ -90,7 +90,7 @@ func putAccount() string {
 	return ret
 }
 
-func deleteAccount() string {
+func deleteBinary() string {
 	var ret string
 	request := accountdto.DeleteRequest{
 		ID: accountID,
@@ -103,7 +103,7 @@ func deleteAccount() string {
 	return ret
 }
 
-func accountToString(account domain.Account) string {
+func binaryToString(account domain.Account) string {
 	ret := fmt.Sprintf("[%d] login: %s, password: %s, created_at: %s, updated_at: %s\n",
 		account.ID,
 		account.Login,

@@ -64,7 +64,7 @@ func (c *Config) Load() error {
 
 func (c Config) GetPostgresDSN() string {
 	return fmt.Sprintf(
-		`host=localhost port=5432 user=%s password=%s dbname=%s sslmode=disable`,
+		`host=postgres port=5432 user=%s password=%s dbname=%s sslmode=disable`,
 		c.Database.User, c.Database.Password, c.Database.DBName,
 	)
 }

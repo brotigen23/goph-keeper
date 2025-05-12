@@ -1,108 +1,39 @@
 # goph-keeper
 
-## Roadmap
-
-### Server
-#### Some
-- [ ] Godoc
-- [ ] Codecov
-#### Code
-- [x] Config
-- [ ] DTO
-  - [x] Account
-- [x] Model
-- [ ] Mapper
-- [ ] Server
-- [ ] Handler
-  - [ ] Accounts
-    - [ ] Post 
-    - [x] Get
-    - [x] Put
-- [ ] Service
-  - [ ] Auth
-  - [x] Accounts
-  - [ ] Text data
-  - [ ] Binary data
-  - [ ] Cards data
-  - [ ] Metadata
-- [ ] Repository
-  - [x] Postgres
-    - [x] Accounts
-    - [x] Text data
-    - [x] Binary data
-    - [x] Cards data
-    - [x] Metadata
-
-
-### Client
-
-- [ ] Core
-  - [ ] Domain
-  - [ ] API client
-    - [x] Account 
-  - [ ] Service
-- [ ] CLI
-  - [x] Auth cmd
-    - [x] Register
-    - [x] Login
-- [ ] TUI
-  - [x] Widgets
-    - [x] Table
-    - [x] Form
-    - [x] Tabs
-
-[Техническое задание](docs/specifications.md)
-
-## Сервер
-- [Диаграмма классов](docs/server/Class%20Diagram.md)
-- [ER диаграмма](docs/server/ERD.md)
-
-
-# Workflow
-
-## API
-### Auth
-```http
-POST login/ HTTP/1.1
-content-type: application/json
-
-{
-    "login": <login>,
-    "password": <password>    
-}
-
+## Usage
+В корне проекта необходимо запустить СУБД Postgres и сервер
+``` bash
+docker compose up
 ```
 
+После использовать клиент следующим образом:
 ### Accounts
-```http
-POST user/accounts HTTP/1.1
-content-type: application/json
-
-{
-    "login": <login>,
-    "password": <password>    
-}
+```bash
+keeper accounts [-m post|get|put|delete]
 ```
+Флаги:
+- --id - для методов put и delete
+- --login - для методов post и put
+- --password - для методов post и put
+- --metadata - для методов post и put
 
-```http
-GET user/accounts HTTP/1.1
-content-type: application/json
+### Text
+```bash
+keeper text [-m post|get|put|delete]
 ```
+Флаги:
+- --id - для методов put и delete
+- --data - для методов post и put
+- --metadata - для методов post и put
 
-## Shared
-- Data
-  - Accounts
-  - Text data
-  - Binary data
-  - Cards data
-  - Metadata
-## Server
-- Handler
-  - Get shared model and map into domain model
-  - Use service
-  - Use returns of service to create response
-- Service
-  - Get domain model, do some stuff and use repo to store changes
-  - Get repo returns to create return
-- Repo
-  - C
+### Cards
+```bash
+keeper cards [-m post|get|put|delete]
+```
+Флаги:
+- --id - для методов put и delete
+- --number - для методов post и put
+- --cardholder - для методов post и put
+- --expiry - для методов post и put
+- --cvv - для методов post и put
+- --metadata - для методов post и put

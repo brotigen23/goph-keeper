@@ -1,9 +1,7 @@
 package manager
 
 import (
-	"log"
-
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api"
 	"github.com/brotigen23/goph-keeper/client/internal/core/domain"
 	"github.com/brotigen23/goph-keeper/client/internal/core/service"
 	ui "github.com/brotigen23/goph-keeper/client/internal/tui"
@@ -19,16 +17,16 @@ type Manager struct {
 	// API
 	client *api.RESTClient
 
-	accountsService *service.AccountsService
+	accountsService *service.Accounts
 	user            string
 	tabs            tab.Tab
 
 	logger *logger.Logger
 }
 
-func New(logger *logger.Logger, accountsService *service.AccountsService, user string) tea.Model {
-	accountTab := datacontroller.New[domain.AccountData](logger)
-	fileTab := datacontroller.New[domain.Binary](logger)
+func New(logger *logger.Logger, accountsService *service.Accounts, user string) tea.Model {
+	accountTab := datacontroller.New[domain.Account](logger)
+	fileTab := datacontroller.New[domain.BinaryData](logger)
 
 	ret := Manager{
 		tabs: *tab.New(
@@ -49,19 +47,17 @@ func (m Manager) Init() tea.Cmd {
 func (m Manager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	m.logger.Info("message", "msg", msg)
-	switch msg := msg.(type) {
-	case datacontroller.RequestDataMsg[domain.AccountData]:
-		accounts, err := m.accountsService.GetAccounts()
+	switch msg.(type) {
+	case datacontroller.RequestDataMsg[domain.Account]:
+		accounts, err := m.accountsService.Fetch()
 		switch err {
 		case nil:
-			msg := ui.FetchSuccessMsg[domain.AccountData]{Data: accounts}
+			msg := ui.FetchSuccessMsg[domain.Account]{Data: accounts}
 			cmds = append(cmds, func() tea.Msg { return msg })
 		default:
 			m.logger.Error(err)
 		}
-	case form.SubmitFormMsg[domain.AccountData]:
-		err := m.accountsService.CreateAccount(msg.Data)
-		log.Println(err)
+	case form.SubmitFormMsg[domain.Account]:
 	}
 	tabs, cmd := m.tabs.Update(msg)
 	cmds = append(cmds, cmd)

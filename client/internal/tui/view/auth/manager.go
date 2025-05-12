@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/brotigen23/goph-keeper/client/internal/core/api/api"
+	"github.com/brotigen23/goph-keeper/client/internal/core/api"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/style"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/util"
 	"github.com/brotigen23/goph-keeper/client/internal/tui/view/auth/login"

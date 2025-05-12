@@ -9,7 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var accountsService *service.AccountsService
+var accountsService *service.Accounts
+var textService *service.Text
+var binaryService *service.Binary
+var cardsService *service.Cards
 var client *api.RESTClient
 
 // Need to init servicies with that client
@@ -26,6 +29,12 @@ func preRun(cmd *cobra.Command, args []string) error {
 			authService = service.NewAuth(client)
 		case "accounts":
 			accountsService = service.NewAccounts(client)
+		case "text":
+			textService = service.NewText(client)
+		case "binary":
+			binaryService = service.NewBinary(client)
+		case "cards":
+			cardsService = service.NewCards(client)
 		}
 	}
 	return nil

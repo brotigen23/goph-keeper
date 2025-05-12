@@ -1,6 +1,8 @@
 package app
 
 import (
+	"path/filepath"
+
 	"github.com/brotigen23/goph-keeper/server/docs"
 	"github.com/brotigen23/goph-keeper/server/internal/config"
 	"github.com/brotigen23/goph-keeper/server/internal/handler/auth"
@@ -38,7 +40,8 @@ func Run() error {
 		return err
 	}
 	defer db.Close()
-	err = db.Migrate("file://db/postgres/migration")
+	migrationPath := filepath.Join("db", "postgres", "migration")
+	err = db.Migrate("file://" + migrationPath)
 	if err != nil {
 		logger.Error(err)
 		return err

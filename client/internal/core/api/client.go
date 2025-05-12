@@ -15,11 +15,12 @@ type RESTClient struct {
 	jwt    string
 }
 
-func New(baseURL string) *RESTClient {
+func New(baseURL string, jwt string) *RESTClient {
 	client := resty.New().
 		SetBaseURL(baseURL)
 
 	return &RESTClient{
+		jwt:    jwt,
 		client: client,
 	}
 }
