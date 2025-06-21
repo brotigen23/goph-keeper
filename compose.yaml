@@ -1,5 +1,4 @@
 services:
-  # БД
   postgres:
     image: postgres
     healthcheck:
