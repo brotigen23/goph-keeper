@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/brotigen23/goph-keeper/backend/services/account/internal/domain/entity"
+	"github.com/brotigen23/goph-keeper/accounts/internal/domain/entity"
 )
 
 type Account struct {

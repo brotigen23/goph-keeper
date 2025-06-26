@@ -1,29 +1,17 @@
 package http
 
 import (
-	"github.com/brotigen23/goph-keeper/backend/services/account/internal/domain/usecase"
+	"github.com/brotigen23/goph-keeper/accounts/internal/domain/usecase"
 	"github.com/gin-gonic/gin"
 )
 
-type handler struct {
-	service usecase.Usecase
-}
-
-func newHandler(service usecase.Usecase) *handler {
-	return &handler{
-		service: service,
-	}
-}
-
-func (c *handler) create(ctx *gin.Context) {
-
-}
-
-func NewAccountRouter(r *gin.RouterGroup, service usecase.Usecase) error {
-	// Middleware
+func AddRouterGroup(rg *gin.RouterGroup, service usecase.Usecase) error {
 	handler := newHandler(service)
-	// Handlers
-	ar := r.Group("account")
-	ar.GET("list", handler.create)
+	r := rg.Group("/account")
+	r.OPTIONS("/", nil)
+
+	r.POST("/", handler.create)
+	r.GET("/", handler.get)
+
 	return nil
 }

@@ -1,4 +1,4 @@
-module github.com/brotigen23/goph-keeper/backend
+module github.com/brotigen23/goph-keeper/accounts
 
 go 1.23.7
 
