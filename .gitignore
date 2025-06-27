@@ -30,3 +30,5 @@ log/
 .vscode/
 
 bin/
+
+wire_gen.go

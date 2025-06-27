@@ -1,9 +1,5 @@
 package util
 
-func IntPtr(i int) *int {
+func Ptr[T any](i T) *T {
 	return &i
-}
-
-func StrPtr(s string) *string {
-	return &s
 }
