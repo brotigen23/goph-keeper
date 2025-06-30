@@ -14,10 +14,10 @@ type VerifyUserInput struct {
 
 func (i *VerifyUserInput) Validate() error {
 	if i.Login == "" {
-		return ErrBadLogin
+		return ErrEmptyLogin
 	}
 	if i.Password == "" {
-		return ErrBadPassword
+		return ErrEmptyPassword
 	}
 	return nil
 }

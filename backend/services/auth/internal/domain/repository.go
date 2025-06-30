@@ -3,9 +3,8 @@ package domain
 import "context"
 
 type Filter struct {
-	ID       *int
-	Login    *string
-	Password *string
+	ID    *int
+	Login *string
 }
 
 type Updates struct {

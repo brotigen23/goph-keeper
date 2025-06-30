@@ -14,10 +14,10 @@ type CreateUserInput struct {
 
 func (i *CreateUserInput) Validate() error {
 	if i.Login == "" {
-		return ErrBadLogin
+		return ErrEmptyLogin
 	}
 	if i.Password == "" {
-		return ErrBadPassword
+		return ErrEmptyPassword
 	}
 	return nil
 }
@@ -37,6 +37,9 @@ func NewCreateUserUseCase(repo domain.Repository) *CreateUserUseCase {
 }
 
 func (u *CreateUserUseCase) Execute(ctx context.Context, input CreateUserInput) (*CreateUserOutput, error) {
+	if err := input.Validate(); err != nil {
+		return nil, err
+	}
 	pass, err := crypt.HashPassword(input.Password)
 	if err != nil {
 		return nil, err
